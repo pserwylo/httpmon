@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.jtb.httpmon.model.Monitor;
+import org.jtb.httpmon.model.Request;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -94,10 +95,36 @@ public class Prefs {
 		setMonitors(monitors);
 	}
 
+	public void setMonitor(Monitor monitor) {
+		ArrayList<Monitor> monitors = getMonitors();
+		monitors.remove(monitor);
+		monitors.add(monitor);
+		setMonitors(monitors);
+	}
+
+	public void setRequest(Request request) {
+		ArrayList<Request> requests = getRequests();
+		requests.remove(request);
+		requests.add(request);
+		setRequests(requests);
+	}
+
+	public void addRequest(Request request) {
+		ArrayList<Request> requests = getRequests();
+		requests.add(request);
+		setRequests(requests);
+	}
+
 	public void setMonitors(ArrayList<Monitor> monitors) {
 		JSONArray ja = Monitor.toJSONArray(monitors);
 		String arrayString = ja.toString();
 		setString("monitors", arrayString);
+	}
+
+	public void setRequests(ArrayList<Request> requests) {
+		JSONArray ja = Request.toJSONArray(requests);
+		String arrayString = ja.toString();
+		setString("requests", arrayString);
 	}
 	
 	public ArrayList<Monitor> getMonitors() {
@@ -110,5 +137,35 @@ public class Prefs {
 		}
 		ArrayList<Monitor> monitors = Monitor.toMonitorList(ja);
 		return monitors;
+	}
+
+	public ArrayList<Request> getRequests() {
+		String arrayString = getString("requests", "[]");
+		JSONArray ja;
+		try {
+			ja = new JSONArray(arrayString);
+		} catch (JSONException e) {
+			throw new RuntimeException("could not parse request array string", e);
+		}
+		ArrayList<Request> requests = Request.toRequestList(ja);
+		return requests;
+	}
+
+	public Request getRequest(String name) {
+		ArrayList<Request> requests = getRequests();
+		for (int i = 0; i < requests.size(); i++) {
+			if (requests.get(i).getName().equals(name)) {
+				return requests.get(i);
+			}
+		}
+		return null;
+	}
+	public ArrayList<String> getRequestNames() {
+		ArrayList<Request> requests = getRequests();
+		ArrayList<String> names = new ArrayList<String>();
+		for (int i = 0; i < requests.size(); i++) {
+			names.add(requests.get(i).getName());
+		}
+		return names;
 	}
 }

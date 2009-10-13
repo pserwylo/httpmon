@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 public class Monitor implements Serializable {
 	private String name;
+	private String requestName;
 	
 	public Monitor() {
 		// nothing
@@ -18,6 +19,7 @@ public class Monitor implements Serializable {
 	public Monitor(JSONObject jo) {
 		try {
 			this.name = jo.getString("name");
+			this.setRequestName(jo.getString("requestName"));
 		} catch (JSONException e) {
 			throw new RuntimeException("error converting from JSON object", e) ;
 		}
@@ -30,15 +32,48 @@ public class Monitor implements Serializable {
 		this.name = name;
 	}
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Monitor other = (Monitor) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		return true;
+	}
+
 	public JSONObject toJSONObject() {
 		try {
 			JSONObject jo = new JSONObject();
 			jo.put("name", name);
-			
+			jo.put("requestName", requestName);
 			return jo;
 		} catch (JSONException e) {
 			throw new RuntimeException("error converting to JSON object", e);
 		}
+	}
+	
+	public void setRequestName(String requestName) {
+		this.requestName = requestName;
+	}
+
+	public String getRequestName() {
+		return requestName;
 	}
 	
 	public static ArrayList<Monitor> toMonitorList(JSONArray ja) {
