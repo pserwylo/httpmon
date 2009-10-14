@@ -92,6 +92,13 @@ public class Prefs {
 	public void addMonitor(Monitor monitor) {
 		ArrayList<Monitor> monitors = getMonitors();
 		monitors.add(monitor);
+		monitor.setCreationTime(System.currentTimeMillis());
+		setMonitors(monitors);
+	}
+
+	public void removeMonitor(Monitor monitor) {
+		ArrayList<Monitor> monitors = getMonitors();
+		monitors.remove(monitor);
 		setMonitors(monitors);
 	}
 
@@ -102,31 +109,12 @@ public class Prefs {
 		setMonitors(monitors);
 	}
 
-	public void setRequest(Request request) {
-		ArrayList<Request> requests = getRequests();
-		requests.remove(request);
-		requests.add(request);
-		setRequests(requests);
-	}
-
-	public void addRequest(Request request) {
-		ArrayList<Request> requests = getRequests();
-		requests.add(request);
-		setRequests(requests);
-	}
-
 	public void setMonitors(ArrayList<Monitor> monitors) {
 		JSONArray ja = Monitor.toJSONArray(monitors);
 		String arrayString = ja.toString();
 		setString("monitors", arrayString);
 	}
 
-	public void setRequests(ArrayList<Request> requests) {
-		JSONArray ja = Request.toJSONArray(requests);
-		String arrayString = ja.toString();
-		setString("requests", arrayString);
-	}
-	
 	public ArrayList<Monitor> getMonitors() {
 		String arrayString = getString("monitors", "[]");
 		JSONArray ja;
@@ -139,33 +127,13 @@ public class Prefs {
 		return monitors;
 	}
 
-	public ArrayList<Request> getRequests() {
-		String arrayString = getString("requests", "[]");
-		JSONArray ja;
-		try {
-			ja = new JSONArray(arrayString);
-		} catch (JSONException e) {
-			throw new RuntimeException("could not parse request array string", e);
-		}
-		ArrayList<Request> requests = Request.toRequestList(ja);
-		return requests;
-	}
-
-	public Request getRequest(String name) {
-		ArrayList<Request> requests = getRequests();
-		for (int i = 0; i < requests.size(); i++) {
-			if (requests.get(i).getName().equals(name)) {
-				return requests.get(i);
+	public Monitor getMonitor(String name) {
+		ArrayList<Monitor> monitors = getMonitors();
+		for (int i = 0; i < monitors.size(); i++) {
+			if (monitors.get(i).getName().equals(name)) {
+				return monitors.get(i);
 			}
 		}
 		return null;
-	}
-	public ArrayList<String> getRequestNames() {
-		ArrayList<Request> requests = getRequests();
-		ArrayList<String> names = new ArrayList<String>();
-		for (int i = 0; i < requests.size(); i++) {
-			names.add(requests.get(i).getName());
-		}
-		return names;
 	}
 }

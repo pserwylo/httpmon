@@ -1,119 +1,127 @@
 package org.jtb.httpmon;
 
-import java.util.ArrayList;
-
+import org.jtb.httpmon.model.Condition;
+import org.jtb.httpmon.model.ConditionType;
 import org.jtb.httpmon.model.Monitor;
 import org.jtb.httpmon.model.Request;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 
 public class EditMonitorActivity extends Activity {
 	private static final int SAVE_MENU = 0;
 	private static final int CANCEL_MENU = 1;
 
-	private static final int NEW_REQUEST_REQUEST = 0;
-	private static final int EDIT_REQUEST_REQUEST = 1;
+	private static final int EDIT_REQUEST_REQUEST = 0;
+	private static final int NEW_CONDITION_REQUEST = 1;
+	static final int EDIT_CONDITION_REQUEST = 2;
 
 	private Monitor mMonitor;
 	private EditText mNameEdit;
-	private Button mNewRequestButton;
 	private Button mEditRequestButton;
+	private TextView mRequestText;
+	private TextView mEmptyRequestText;
 	private EditMonitorActivity mThis;
-	private Spinner mRequestSpinner;
-
+	private ListView mConditionList;
+	private Button mAddConditionButton;
+	private TextView mEmptyConditionsText;
+	private Spinner mConditionsSpinner;
+	private AlertDialog mConditionClickDialog;
+	private Condition mEditCondition;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.edit_monitor);
 
-		Boolean newMonitor = savedInstanceState != null ? (Boolean) savedInstanceState
-				.get("org.jtb.httpmon.new")
-				: null;
-		if (newMonitor == null) {
+		mMonitor = savedInstanceState != null ? (Monitor) savedInstanceState
+				.get("org.jtb.httpmon.monitor") : null;
+		if (mMonitor == null) {
 			Bundle extras = getIntent().getExtras();
-			newMonitor = extras != null ? (Boolean) extras
-					.get("org.jtb.httpmon.new") : null;
+			mMonitor = extras != null ? (Monitor) extras
+					.get("org.jtb.httpmon.monitor") : null;
 		}
 
-		if (newMonitor == null) {
-			throw new AssertionError("new flag was not set");
-		}
-
-		if (newMonitor) {
+		if (mMonitor == null) {
 			mMonitor = new Monitor();
-		} else {
-			mMonitor = savedInstanceState != null ? (Monitor) savedInstanceState
-					.get("org.jtb.httpmon.monitor")
-					: null;
-			if (mMonitor == null) {
-				Bundle extras = getIntent().getExtras();
-				mMonitor = extras != null ? (Monitor) extras
-						.get("org.jtb.httpmon.monitor") : null;
-			}
-			
-			if (mMonitor == null) {
-				throw new AssertionError("monitor was not set");
-			}
 		}
-		
 
 		mThis = this;
 		mNameEdit = (EditText) findViewById(R.id.name_edit);
-		if (!newMonitor) {
-			mNameEdit.setEnabled(false);
-		}
-		
-		mNewRequestButton = (Button) findViewById(R.id.new_request_button);
-		mNewRequestButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				Intent intent = new Intent(mThis, EditRequestActivity.class);
-				intent.putExtra("org.jtb.httpmon.new", true);
-				startActivityForResult(intent, NEW_REQUEST_REQUEST);
+		mRequestText = (TextView) findViewById(R.id.request_text);
+		mEmptyRequestText = (TextView) findViewById(R.id.empty_request_text);
+		mEmptyConditionsText = (TextView) findViewById(R.id.empty_conditions_text);
+
+		mConditionList = (ListView) findViewById(R.id.condition_list);
+		mConditionList.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View v,
+					int position, long id) {
+				mEditCondition = mMonitor.getConditions().get(position);
+				Intent intent = new Intent(mThis, mEditCondition.getConditionType()
+						.getActivityClass());
+				intent.putExtra("org.jtb.httpmon.condition", mEditCondition);
+				startActivityForResult(intent, EDIT_CONDITION_REQUEST);
 			}
 		});
+		mConditionList
+				.setOnItemLongClickListener(new OnItemLongClickListener() {
+					public boolean onItemLongClick(AdapterView<?> parent,
+							View v, int position, long id) {
+						mEditCondition = mMonitor.getConditions().get(position);
+						AlertDialog.Builder builder = new ConditionClickDialog.Builder(
+								mThis, mMonitor, position);
+						mConditionClickDialog = builder.create();
+						mConditionClickDialog.show();
+						return true;
+					}
+				});
+
+		mAddConditionButton = (Button) findViewById(R.id.add_condition_button);
+		mAddConditionButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				ConditionType ct = (ConditionType) mConditionsSpinner
+						.getSelectedItem();
+				Intent intent = new Intent(mThis, ct.getActivityClass());
+				intent.putExtra("org.jtb.httpmon.conditionType", ct);
+				startActivityForResult(intent, NEW_CONDITION_REQUEST);
+			}
+		});
+
 		mEditRequestButton = (Button) findViewById(R.id.edit_request_button);
 		mEditRequestButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				Intent intent = new Intent(mThis, EditRequestActivity.class);
-				Request request = new Prefs(mThis).getRequest((String) mRequestSpinner.getSelectedItem());
-				intent.putExtra("org.jtb.httpmon.new", false);
-				intent.putExtra("org.jtb.httpmon.request", request);
+				intent.putExtra("org.jtb.httpmon.request", mMonitor
+						.getRequest());
 				startActivityForResult(intent, EDIT_REQUEST_REQUEST);
 			}
 		});
 
-		mRequestSpinner = (Spinner) findViewById(R.id.request_spinner);
-		updateSpinner();
-		setViews();
-	}
-
-	private void updateSpinner() {
-		ArrayList<String> requestNames = new Prefs(this).getRequestNames();
-		ArrayAdapter<String> raa = new ArrayAdapter<String>(this,
-				android.R.layout.simple_spinner_item, requestNames);
-		raa
+		mConditionsSpinner = (Spinner) findViewById(R.id.conditions_spinner);
+		ArrayAdapter<ConditionType> aa = new ArrayAdapter<ConditionType>(this,
+				android.R.layout.simple_spinner_item, ConditionType.TYPES);
+		aa
 				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		mRequestSpinner.setAdapter(raa);
-	}
+		mConditionsSpinner.setAdapter(aa);
 
-	private void selectRequest(Request request) {
-		selectRequest(request.getName());
-	}
-	
-	private void selectRequest(String requestName) {
-		ArrayList<String> requestNames = new Prefs(this).getRequestNames();
-		int i = requestNames.indexOf(requestName);
-		mRequestSpinner.setSelection(i);
-		mRequestSpinner.setSelected(false);
+		setNameView();
+		setRequestView();
+		setConditionsView();
 	}
 
 	@Override
@@ -146,35 +154,63 @@ public class EditMonitorActivity extends Activity {
 
 	private void setMonitor() {
 		mMonitor.setName(mNameEdit.getText().toString());
-		mMonitor.setRequestName((String) mRequestSpinner.getSelectedItem());
 	}
-	
-	private void setViews() {
+
+	private void setNameView() {
 		mNameEdit.setText(mMonitor.getName());
-		selectRequest(mMonitor.getRequestName());
+	}
+
+	void setConditionsView() {
+		if (mMonitor.getConditions().size() == 0) {
+			mConditionList.setVisibility(View.GONE);
+			mEmptyConditionsText.setVisibility(View.VISIBLE);
+		} else {
+			mConditionList.setVisibility(View.VISIBLE);
+			mEmptyConditionsText.setVisibility(View.GONE);
+			ConditionAdapter ca = new ConditionAdapter(this, mMonitor
+					.getConditions());
+			mConditionList.setAdapter(ca);
+		}
+	}
+
+	private void setRequestView() {
+		if (mMonitor.getRequest() == null) {
+			mRequestText.setVisibility(View.GONE);
+			mEmptyRequestText.setVisibility(View.VISIBLE);
+		} else {
+			mRequestText.setVisibility(View.VISIBLE);
+			mRequestText.setText(mMonitor.getRequest().toString());
+			mEmptyRequestText.setVisibility(View.GONE);
+		}
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
-		case NEW_REQUEST_REQUEST:
-			if (resultCode == Activity.RESULT_OK) {
-				Request request = (Request) data
-						.getSerializableExtra("org.jtb.httpmon.request");
-				Prefs prefs = new Prefs(this);
-				prefs.addRequest(request);
-				updateSpinner();
-				selectRequest(request);
-			}
-			break;
 		case EDIT_REQUEST_REQUEST:
 			if (resultCode == Activity.RESULT_OK) {
 				Request request = (Request) data
 						.getSerializableExtra("org.jtb.httpmon.request");
-				Prefs prefs = new Prefs(this);
-				prefs.setRequest(request);
+				mMonitor.setRequest(request);
+				setRequestView();
+			}
+			break;
+		case NEW_CONDITION_REQUEST:
+			if (resultCode == Activity.RESULT_OK) {
+				Condition condition = (Condition) data
+						.getSerializableExtra("org.jtb.httpmon.condition");
+				mMonitor.getConditions().add(condition);
+				setConditionsView();
+			}
+			break;
+		case EDIT_CONDITION_REQUEST:
+			if (resultCode == Activity.RESULT_OK) {
+				Condition condition = (Condition) data
+						.getSerializableExtra("org.jtb.httpmon.condition");
+				mMonitor.getConditions().remove(mEditCondition);
+				mMonitor.getConditions().add(condition);
+				setConditionsView();
 			}
 			break;
 		}
 	}
-
 }

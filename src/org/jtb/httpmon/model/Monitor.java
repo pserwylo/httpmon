@@ -8,9 +8,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Monitor implements Serializable {
+public class Monitor implements Serializable, Comparable<Monitor> {
+	private static final long serialVersionUID = 1L;
+
+	public static final int STATE_STOPPED = 0;
+	public static final int STATE_STARTED = 1;
+	public static final int STATE_VALID = 2;
+	public static final int STATE_INVALID = 3;
+	public static final int STATE_RUNNING = 4;
+	
 	private String name;
-	private String requestName;
+	private Request request;
+	private ArrayList<Condition> conditions = new ArrayList<Condition>();
+	private int state = STATE_STOPPED;
+	private long creationTime = -1;
 	
 	public Monitor() {
 		// nothing
@@ -19,9 +30,20 @@ public class Monitor implements Serializable {
 	public Monitor(JSONObject jo) {
 		try {
 			this.name = jo.getString("name");
-			this.setRequestName(jo.getString("requestName"));
+			this.state = jo.getInt("state");
+			this.creationTime = jo.getLong("creationTime");
+			this.setRequest(new Request(jo.getJSONObject("request")));
+			
+			JSONArray conditionArray = jo.getJSONArray("conditions");
+			if (conditionArray != null) {
+				for (int i = 0; i < conditionArray.length(); i++) {
+					JSONObject conditionObject = conditionArray.getJSONObject(i);
+					Condition condition = ConditionType.newCondition(conditionObject);
+					conditions.add(condition);
+				}
+			}
 		} catch (JSONException e) {
-			throw new RuntimeException("error converting from JSON object", e) ;
+			throw new RuntimeException(e) ;
 		}
 	}
 	public String getName() {
@@ -30,6 +52,10 @@ public class Monitor implements Serializable {
 	
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public ArrayList<Condition> getConditions() {
+		return conditions;
 	}
 	
 	@Override
@@ -61,19 +87,19 @@ public class Monitor implements Serializable {
 		try {
 			JSONObject jo = new JSONObject();
 			jo.put("name", name);
-			jo.put("requestName", requestName);
+			jo.put("state", state);
+			jo.put("creationTime", creationTime);
+			jo.put("request", request.toJSONObject());
+			JSONArray conditionArray = new JSONArray();
+			for (int i = 0; i < conditions.size(); i++) {
+				JSONObject conditionObject = conditions.get(i).toJSONObject();
+				conditionArray.put(conditionObject);
+			}
+			jo.put("conditions", conditionArray);
 			return jo;
 		} catch (JSONException e) {
-			throw new RuntimeException("error converting to JSON object", e);
+			throw new RuntimeException(e);
 		}
-	}
-	
-	public void setRequestName(String requestName) {
-		this.requestName = requestName;
-	}
-
-	public String getRequestName() {
-		return requestName;
 	}
 	
 	public static ArrayList<Monitor> toMonitorList(JSONArray ja) {
@@ -86,7 +112,7 @@ public class Monitor implements Serializable {
 			}
 			return monitors;
 		} catch (JSONException e) {
-			throw new RuntimeException("error converting from JSON array", e);
+			throw new RuntimeException(e);
 		}
 	}
 	
@@ -98,5 +124,38 @@ public class Monitor implements Serializable {
 		}
 		
 		return ja;
+	}
+
+	public void setRequest(Request request) {
+		this.request = request;
+	}
+
+	public Request getRequest() {
+		return request;
+	}
+
+	public void setState(int state) {
+		this.state = state;
+	}
+
+	public int getState() {
+		return state;
+	}
+
+	public void setCreationTime(long creationTime) {
+		this.creationTime = creationTime;
+	}
+
+	public long getCreationTime() {
+		return creationTime;
+	}
+
+	public int compareTo(Monitor other) {
+		if (other.getCreationTime() > creationTime) {
+			return -1;
+		} else if (other.getCreationTime() < creationTime) {
+			return 1;
+		} 
+		return 0;
 	}
 }

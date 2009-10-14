@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_height="wrap_content" android:layout_width="fill_parent">
+	<TableRow android:id="@+id/row">
+		<TextView android:id="@+id/string_text" android:text="Response time is less than 2000ms"
+			android:layout_width="fill_parent" android:layout_height="wrap_content"
+			android:textColor="#ffffff" android:gravity="center_horizontal" />
+	</TableRow>
+</TableLayout>

@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="org.jtb.httpmon"
-      android:versionCode="1"
-      android:versionName="1.0">
-    <application android:icon="@drawable/icon" android:label="@string/app_name">
-        <activity android:name=".ManageMonitorsActivity"
-                  android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity android:name=".EditMonitorActivity"/>
-        <activity android:name=".EditRequestActivity"/>
-    </application>
-    <uses-sdk android:minSdkVersion="4" />
-
+	package="org.jtb.httpmon" android:versionCode="1" android:versionName="1.0">
+	<application android:icon="@drawable/icon" android:label="@string/app_name">
+		<activity android:name=".ManageMonitorsActivity"
+			android:label="httpmon - Manage Monitors">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<receiver android:name=".ManageMonitorsReceiver"/>
+		<activity android:name=".EditMonitorActivity" android:label="httpmon - Edit Monitor" />
+		<activity android:name=".EditRequestActivity" android:label="httpmon - Edit Request" />
+		<activity android:name=".EditPingConditionActivity" android:label="httpmon - Edit Ping Condition" />
+		<service android:name=".MonitorService"/>
+	</application>
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-sdk android:minSdkVersion="4" />
 </manifest> 

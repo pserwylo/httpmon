@@ -7,17 +7,11 @@
 		android:layout_width="fill_parent" android:layout_height="wrap_content">
 		<TextView android:layout_width="fill_parent" android:textStyle="bold"
 			android:textColor="#ffffff" android:layout_height="wrap_content"
-			android:text="URL" />
-		<EditText android:id="@+id/url_edit" android:layout_gravity="left"
+			android:text="Response time is less than" />
+		<EditText android:id="@+id/response_time_edit" android:layout_gravity="left"
 			android:layout_width="fill_parent" android:layout_height="wrap_content" />
-	</LinearLayout>
-	<LinearLayout android:orientation="vertical"
-		android:layout_margin="5px" android:padding="5px" android:background="#aaaaaa"
-		android:layout_width="fill_parent" android:layout_height="wrap_content">
 		<TextView android:layout_width="fill_parent" android:textStyle="bold"
 			android:textColor="#ffffff" android:layout_height="wrap_content"
-			android:text="Interval" />
-		<EditText android:id="@+id/interval_edit" android:layout_gravity="left"
-			android:layout_width="fill_parent" android:layout_height="wrap_content" />
+			android:text="milliseconds" />
 	</LinearLayout>
 </LinearLayout>

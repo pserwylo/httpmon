@@ -14,7 +14,6 @@ public class EditRequestActivity extends Activity {
 	private static final int CANCEL_MENU = 1;
 
 	private Request mRequest;
-	private EditText mNameEdit;
 	private EditText mUrlEdit;
 	private EditText mIntervalEdit;
 
@@ -23,42 +22,20 @@ public class EditRequestActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.edit_request);
 
-		Boolean newRequest = savedInstanceState != null ? (Boolean) savedInstanceState
-				.get("org.jtb.httpmon.new")
-				: null;
-		if (newRequest == null) {
+		mRequest = savedInstanceState != null ? (Request) savedInstanceState
+				.get("org.jtb.httpmon.request") : null;
+		if (mRequest == null) {
 			Bundle extras = getIntent().getExtras();
-			newRequest = extras != null ? (Boolean) extras
-					.get("org.jtb.httpmon.new") : null;
+			mRequest = extras != null ? (Request) extras
+					.get("org.jtb.httpmon.request") : null;
 		}
-
-		if (newRequest == null) {
-			throw new AssertionError("new flag was not set");
-		}
-
-		if (newRequest) {
+		if (mRequest == null) {
 			mRequest = new Request();
-		} else {
-			mRequest = savedInstanceState != null ? (Request) savedInstanceState
-					.get("org.jtb.httpmon.request")
-					: null;
-			if (mRequest == null) {
-				Bundle extras = getIntent().getExtras();
-				mRequest = extras != null ? (Request) extras
-						.get("org.jtb.httpmon.request") : null;
-			}
-			if (mRequest == null) {
-				throw new AssertionError("request was not set");
-			}
 		}
 
-		mNameEdit = (EditText) findViewById(R.id.name_edit);
-		if (!newRequest) {
-			mNameEdit.setEnabled(false);
-		}
 		mUrlEdit = (EditText) findViewById(R.id.url_edit);
 		mIntervalEdit = (EditText) findViewById(R.id.interval_edit);
-		
+
 		setViews();
 	}
 
@@ -91,17 +68,15 @@ public class EditRequestActivity extends Activity {
 	}
 
 	private void setRequest() {
-		mRequest.setName(mNameEdit.getText().toString());
 		mRequest.setUrl(mUrlEdit.getText().toString());
 		mRequest.setInterval(mIntervalEdit.getText().toString());
 	}
 
 	private void setViews() {
-		mNameEdit.setText(mRequest.getName());
 		mUrlEdit.setText(mRequest.getUrl());
 		mIntervalEdit.setText(Integer.toString(mRequest.getInterval()));
 	}
-	
+
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
 		}
