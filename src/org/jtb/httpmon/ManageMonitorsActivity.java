@@ -32,9 +32,11 @@ public class ManageMonitorsActivity extends Activity {
 	private static final int NEW_MONITOR_MENU = 0;
 	private static final int START_ALL_MENU = 1;
 	private static final int STOP_ALL_MENU = 2;
+	private static final int PREFS_MENU = 3;
 
 	static final int NEW_MONITOR_REQUEST = 0;
 	static final int EDIT_MONITOR_REQUEST = 1;
+	static final int PREFS_REQUEST = 2;
 
 	private ListView mMonitorList;
 	private ArrayList<Monitor> mMonitors;
@@ -85,6 +87,9 @@ public class ManageMonitorsActivity extends Activity {
 		});
 
 		mEmptyListText = (TextView) findViewById(R.id.empty_list_text);
+
+		setAllStopped();
+		update();
 	}
 
 	@Override
@@ -96,6 +101,8 @@ public class ManageMonitorsActivity extends Activity {
 				R.drawable.upload);
 		menu.add(0, STOP_ALL_MENU, 2, R.string.stop_all_menu).setIcon(
 				R.drawable.cancel);
+		menu.add(0, PREFS_MENU, 3, R.string.preferences_menu).setIcon(
+				R.drawable.preferences);
 		return result;
 	}
 
@@ -112,6 +119,10 @@ public class ManageMonitorsActivity extends Activity {
 			return true;
 		case START_ALL_MENU:
 			startAll();
+			return true;
+		case PREFS_MENU:
+			Intent i = new Intent(this, PrefsActivity.class);
+			startActivityForResult(i, PREFS_REQUEST);
 			return true;
 		}
 
@@ -132,6 +143,8 @@ public class ManageMonitorsActivity extends Activity {
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
+		case PREFS_REQUEST:
+			break;
 		case NEW_MONITOR_REQUEST:
 			if (resultCode == Activity.RESULT_OK) {
 				Monitor monitor = (Monitor) data
@@ -205,9 +218,6 @@ public class ManageMonitorsActivity extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
-
-		setAllStopped();
-		update();
 
 		registerReceiver(mReceiver, new IntentFilter("ManageMonitors.update"));
 		Log.d(getClass().getSimpleName(), "resumed");

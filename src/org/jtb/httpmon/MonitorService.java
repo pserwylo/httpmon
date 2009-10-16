@@ -41,7 +41,8 @@ public class MonitorService extends IntentService {
 			prefs.setMonitor(monitor);
 			sendBroadcast(new Intent("ManageMonitors.update"));
 
-			Response response = getResponse(monitor.getRequest());
+			int timeout = prefs.getTimeout();
+			Response response = getResponse(monitor.getRequest(), timeout);
 			int state = Monitor.STATE_VALID;
 			for (int i = 0; i < monitor.getConditions().size(); i++) {
 				if (!monitor.getConditions().get(i).isValid(response)) {
@@ -67,7 +68,7 @@ public class MonitorService extends IntentService {
 		}
 	}
 
-	private Response getResponse(Request request) {
+	private Response getResponse(Request request, int timeout) {
 		Response response = new Response();
 		BufferedReader reader = null;
 
@@ -75,7 +76,7 @@ public class MonitorService extends IntentService {
 			URL u = new URL(request.getUrl());
 			CodeTimer timer = new CodeTimer();
 			HttpURLConnection uc = (HttpURLConnection) u.openConnection();
-			uc.setReadTimeout(30 * 1000); // 30 seconds
+			uc.setReadTimeout(timeout * 1000);
 
 			int responseCode = uc.getResponseCode();
 			response.setResponseCode(responseCode);

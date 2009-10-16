@@ -9,6 +9,7 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+		<activity android:name=".PrefsActivity" android:label="httpmon - Preferences" />
 		<activity android:name=".EditMonitorActivity" android:label="httpmon - Edit Monitor" />
 		<activity android:name=".EditRequestActivity" android:label="httpmon - Edit Request" />
 		<activity android:name=".EditResponseTimeConditionActivity" android:label="httpmon - Edit Ping Condition" />

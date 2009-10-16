@@ -89,6 +89,10 @@ public class Prefs {
 		return b;
 	}
 
+	public int getTimeout() {
+		return getInt("timeout", 30);
+	}
+	
 	public void addMonitor(Monitor monitor) {
 		ArrayList<Monitor> monitors = getMonitors();
 		monitors.add(monitor);
