@@ -224,7 +224,7 @@ public class ManageMonitorsActivity extends Activity {
 		AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		Intent i = new Intent(monitor.getName(), null, this,
 				MonitorReceiver.class);
-		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, 0);
+		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, PendingIntent.FLAG_CANCEL_CURRENT);
 		mgr.cancel(pi);
 		monitor.setState(Monitor.STATE_STOPPED);
 		Prefs prefs = new Prefs(this);
@@ -236,7 +236,7 @@ public class ManageMonitorsActivity extends Activity {
 		AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		Intent i = new Intent(monitor.getName(), null, this,
 				MonitorReceiver.class);
-		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, 0);
+		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, PendingIntent.FLAG_CANCEL_CURRENT);
 		mgr.cancel(pi);
 		mgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock
 				.elapsedRealtime(), monitor.getRequest().getInterval() * 1000,

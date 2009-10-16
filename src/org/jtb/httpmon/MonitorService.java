@@ -51,12 +51,12 @@ public class MonitorService extends IntentService {
 			}
 
 			monitor = prefs.getMonitor(monitor.getName());
-			if (monitor != null) {
+			if (monitor != null && monitor.getState() != Monitor.STATE_STOPPED) {
 				monitor.setState(state);
 				monitor.setLastUpdatedTime();
 				prefs.setMonitor(monitor);
+				sendBroadcast(new Intent("ManageMonitors.update"));
 			}
-			sendBroadcast(new Intent("ManageMonitors.update"));
 		} finally {
 			if (name != null) {
 				Intent wlIntent = new Intent("release", null, this,
@@ -77,9 +77,10 @@ public class MonitorService extends IntentService {
 			HttpURLConnection uc = (HttpURLConnection) u.openConnection();
 			uc.setReadTimeout(30 * 1000); // 30 seconds
 
-			response.setAlive(true);
 			int responseCode = uc.getResponseCode();
 			response.setResponseCode(responseCode);
+			response.setAlive(true);
+
 			if (uc.getResponseCode() != 200) {
 				// TODO: android log
 				return null;

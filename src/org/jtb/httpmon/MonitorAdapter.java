@@ -47,7 +47,11 @@ public class MonitorAdapter extends ArrayAdapter {
 		requestText.setText(monitor.getRequest().toString());
 
 		TextView lastText = (TextView) view.findViewById(R.id.last_text);
-		lastText.setText(getFuzzyTime(monitor.getLastUpdatedTime()));
+		if (state == Monitor.STATE_RUNNING) {
+			lastText.setText("Updating ...");
+		} else {
+			lastText.setText(getFuzzyTime(monitor.getLastUpdatedTime()));
+		}
 
 		return view;
 	}
