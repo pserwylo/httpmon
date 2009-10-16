@@ -8,7 +8,8 @@ import org.json.JSONObject;
 public abstract class ConditionType implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public static final ConditionType[] TYPES = new ConditionType[] {
-		new PingConditionType()
+		new PingConditionType(),
+		new ResponseTimeConditionType()
 	};
 	
 	public abstract Condition newCondition();

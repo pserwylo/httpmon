@@ -46,6 +46,8 @@ public class MonitorClickDialog extends AlertDialog {
 								}
 								break;
 							case 1:
+								mActivity.stopMonitor(monitor);
+								mActivity.setEditMonitor(monitor);
 								Intent i = new Intent(ad.getContext(),
 										EditMonitorActivity.class);
 								i.putExtra("org.jtb.httpmon.monitor", monitor);
@@ -55,9 +57,9 @@ public class MonitorClickDialog extends AlertDialog {
 												ManageMonitorsActivity.EDIT_MONITOR_REQUEST);
 								break;
 							case 2:
+								mActivity.stopMonitor(monitor);
 								Prefs prefs = new Prefs(ad.getContext());
 								prefs.removeMonitor(monitor);
-								mActivity.stopMonitor(monitor);
 								mActivity.update();
 								break;
 							}

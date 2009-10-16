@@ -1,5 +1,8 @@
 package org.jtb.httpmon;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.jtb.httpmon.model.Request;
 
 import android.app.Activity;
@@ -8,6 +11,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class EditRequestActivity extends Activity {
 	private static final int SAVE_MENU = 0;
@@ -53,10 +57,12 @@ public class EditRequestActivity extends Activity {
 		switch (item.getItemId()) {
 		case SAVE_MENU:
 			setRequest();
-			Intent intent = new Intent();
-			intent.putExtra("org.jtb.httpmon.request", mRequest);
-			setResult(Activity.RESULT_OK, intent);
-			finish();
+			if (validateRequest()) {
+				Intent intent = new Intent();
+				intent.putExtra("org.jtb.httpmon.request", mRequest);
+				setResult(Activity.RESULT_OK, intent);
+				finish();
+			}
 			return true;
 		case CANCEL_MENU:
 			setResult(Activity.RESULT_CANCELED);
@@ -67,6 +73,27 @@ public class EditRequestActivity extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 
+	private boolean validateRequest() {
+		try { 
+			new URL(mRequest.getUrl());
+		} catch (MalformedURLException mue) {
+			Toast.makeText(this, "The URL you entered is not valid.",
+					Toast.LENGTH_LONG).show();
+			return false;			
+		}
+		if (mRequest.getUrl().equalsIgnoreCase("http://")) {
+			Toast.makeText(this, "The URL you entered is not valid.",
+					Toast.LENGTH_LONG).show();
+			return false;						
+		}
+		if (mRequest.getInterval() == 0) {
+			Toast.makeText(this, "Please give your your request a non-zero interval.",
+					Toast.LENGTH_LONG).show();
+			return false;
+		}
+		return true;
+	}
+	
 	private void setRequest() {
 		mRequest.setUrl(mUrlEdit.getText().toString());
 		mRequest.setInterval(mIntervalEdit.getText().toString());

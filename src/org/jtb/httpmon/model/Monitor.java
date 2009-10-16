@@ -16,48 +16,55 @@ public class Monitor implements Serializable, Comparable<Monitor> {
 	public static final int STATE_VALID = 2;
 	public static final int STATE_INVALID = 3;
 	public static final int STATE_RUNNING = 4;
-	
+
 	private String name;
 	private Request request;
 	private ArrayList<Condition> conditions = new ArrayList<Condition>();
 	private int state = STATE_STOPPED;
 	private long creationTime = -1;
-	
+	private long lastUpdatedTime = -1;
+
 	public Monitor() {
-		// nothing
+		creationTime = System.currentTimeMillis();
 	}
-	
+
 	public Monitor(JSONObject jo) {
 		try {
 			this.name = jo.getString("name");
 			this.state = jo.getInt("state");
 			this.creationTime = jo.getLong("creationTime");
+			if (jo.has("lastUpdatedTime")) {
+				this.lastUpdatedTime = jo.getLong("lastUpdatedTime");
+			}
 			this.setRequest(new Request(jo.getJSONObject("request")));
-			
+
 			JSONArray conditionArray = jo.getJSONArray("conditions");
 			if (conditionArray != null) {
 				for (int i = 0; i < conditionArray.length(); i++) {
-					JSONObject conditionObject = conditionArray.getJSONObject(i);
-					Condition condition = ConditionType.newCondition(conditionObject);
+					JSONObject conditionObject = conditionArray
+							.getJSONObject(i);
+					Condition condition = ConditionType
+							.newCondition(conditionObject);
 					conditions.add(condition);
 				}
 			}
 		} catch (JSONException e) {
-			throw new RuntimeException(e) ;
+			throw new RuntimeException(e);
 		}
 	}
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public ArrayList<Condition> getConditions() {
 		return conditions;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -89,6 +96,7 @@ public class Monitor implements Serializable, Comparable<Monitor> {
 			jo.put("name", name);
 			jo.put("state", state);
 			jo.put("creationTime", creationTime);
+			jo.put("lastUpdatedTime", lastUpdatedTime);
 			jo.put("request", request.toJSONObject());
 			JSONArray conditionArray = new JSONArray();
 			for (int i = 0; i < conditions.size(); i++) {
@@ -101,7 +109,7 @@ public class Monitor implements Serializable, Comparable<Monitor> {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public static ArrayList<Monitor> toMonitorList(JSONArray ja) {
 		try {
 			ArrayList<Monitor> monitors = new ArrayList<Monitor>();
@@ -115,14 +123,14 @@ public class Monitor implements Serializable, Comparable<Monitor> {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public static JSONArray toJSONArray(ArrayList<Monitor> monitors) {
 		JSONArray ja = new JSONArray();
 		for (int i = 0; i < monitors.size(); i++) {
-			JSONObject jo  = monitors.get(i).toJSONObject();
+			JSONObject jo = monitors.get(i).toJSONObject();
 			ja.put(jo);
 		}
-		
+
 		return ja;
 	}
 
@@ -155,7 +163,15 @@ public class Monitor implements Serializable, Comparable<Monitor> {
 			return -1;
 		} else if (other.getCreationTime() < creationTime) {
 			return 1;
-		} 
+		}
 		return 0;
+	}
+
+	public void setLastUpdatedTime() {
+		this.lastUpdatedTime = System.currentTimeMillis();
+	}
+
+	public long getLastUpdatedTime() {
+		return lastUpdatedTime;
 	}
 }

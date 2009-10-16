@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 
@@ -43,7 +44,7 @@ public class EditMonitorActivity extends Activity {
 	private Spinner mConditionsSpinner;
 	private AlertDialog mConditionClickDialog;
 	private Condition mEditCondition;
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -72,8 +73,12 @@ public class EditMonitorActivity extends Activity {
 			public void onItemClick(AdapterView<?> parent, View v,
 					int position, long id) {
 				mEditCondition = mMonitor.getConditions().get(position);
-				Intent intent = new Intent(mThis, mEditCondition.getConditionType()
-						.getActivityClass());
+				Class c = mEditCondition.getConditionType().getActivityClass();
+				if (c == null) {
+					return;
+				}
+				Intent intent = new Intent(mThis, mEditCondition
+						.getConditionType().getActivityClass());
 				intent.putExtra("org.jtb.httpmon.condition", mEditCondition);
 				startActivityForResult(intent, EDIT_CONDITION_REQUEST);
 			}
@@ -96,9 +101,16 @@ public class EditMonitorActivity extends Activity {
 			public void onClick(View v) {
 				ConditionType ct = (ConditionType) mConditionsSpinner
 						.getSelectedItem();
-				Intent intent = new Intent(mThis, ct.getActivityClass());
-				intent.putExtra("org.jtb.httpmon.conditionType", ct);
-				startActivityForResult(intent, NEW_CONDITION_REQUEST);
+				Class c = ct.getActivityClass();
+				if (c == null) {
+					Condition condition = ct.newCondition();
+					mMonitor.getConditions().add(condition);
+					setConditionsView();
+				} else {
+					Intent intent = new Intent(mThis, ct.getActivityClass());
+					intent.putExtra("org.jtb.httpmon.conditionType", ct);
+					startActivityForResult(intent, NEW_CONDITION_REQUEST);
+				}
 			}
 		});
 
@@ -137,19 +149,55 @@ public class EditMonitorActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case SAVE_MENU:
-			setMonitor();
-			Intent intent = new Intent();
-			intent.putExtra("org.jtb.httpmon.monitor", mMonitor);
-			setResult(Activity.RESULT_OK, intent);
-			finish();
+			save();
 			return true;
 		case CANCEL_MENU:
-			setResult(Activity.RESULT_CANCELED);
-			finish();
+			cancel();
 			return true;
 		}
 
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+	}
+
+	private void cancel() {
+		setResult(Activity.RESULT_CANCELED);
+		finish();
+	}
+
+	private void save() {
+		setMonitor();
+		if (validateMonitor()) {
+			Intent intent = new Intent();
+			intent.putExtra("org.jtb.httpmon.monitor", mMonitor);
+			setResult(Activity.RESULT_OK, intent);
+			finish();
+		}
+	}
+
+	private boolean validateMonitor() {
+		if (mMonitor.getName() == null || mMonitor.getName().length() == 0) {
+			Toast.makeText(this, "Please give your monitor a name first.",
+					Toast.LENGTH_LONG).show();
+			return false;
+		}
+		if (mMonitor.getRequest() == null) {
+			Toast.makeText(this, "Please define a requet for your monitor.",
+					Toast.LENGTH_LONG).show();
+			return false;
+		}
+		if (mMonitor.getConditions().size() == 0) {
+			Toast.makeText(this,
+					"Please define one or more conditions for your monitor.",
+					Toast.LENGTH_LONG).show();
+			return false;
+		}
+
+		return true;
 	}
 
 	private void setMonitor() {

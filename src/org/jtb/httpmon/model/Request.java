@@ -10,8 +10,8 @@ import org.json.JSONObject;
 public class Request implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String url;
-	private int interval;
+	private String url = "http://";
+	private int interval = 60;
 	//TODO: http parameters
 	
 	public Request() {

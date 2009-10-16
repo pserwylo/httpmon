@@ -2,20 +2,20 @@ package org.jtb.httpmon.model;
 
 import org.jtb.httpmon.EditResponseTimeConditionActivity;
 
-public class PingConditionType extends ConditionType {
+public class ResponseTimeConditionType extends ConditionType {
 
 	@Override
 	public Condition newCondition() {
-		return new PingCondition(this);
+		return new ResponseTimeCondition(this);
 	}
 
 	@Override
 	public String toString() {
-		return "Ping";
+		return "Response Time";
 	}
 
 	@Override
 	public Class getActivityClass() {
-		return null;
+		return EditResponseTimeConditionActivity.class;
 	}
 }

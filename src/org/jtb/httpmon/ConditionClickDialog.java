@@ -15,6 +15,7 @@ public class ConditionClickDialog extends AlertDialog {
 		private Monitor mMonitor;
 		private int mPosition;
 		private EditMonitorActivity mActivity;
+		private Condition mCondition;
 
 		public Builder(EditMonitorActivity activity, Monitor monitor,
 				int position) {
@@ -23,33 +24,40 @@ public class ConditionClickDialog extends AlertDialog {
 			this.mActivity = activity;
 			this.mMonitor = monitor;
 			this.mPosition = position;
+			this.mCondition = mMonitor.getConditions().get(mPosition);
 
-			String[] items = new String[2];
-			items[0] = "Edit";
-			items[1] = "Remove";
-			
-			setItems(items,
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int which) {
-							Condition condition = mMonitor.getConditions().get(mPosition);
-							AlertDialog ad = (AlertDialog) dialog;
-							switch (which) {
-							case 0:
-								Intent i = new Intent(ad.getContext(),
-										condition.getConditionType().getActivityClass());
-								i.putExtra("org.jtb.httpmon.condition", condition);
-								mActivity
-										.startActivityForResult(
-												i,
-												EditMonitorActivity.EDIT_CONDITION_REQUEST);
-								break;
-							case 1:
-								mMonitor.getConditions().remove(condition);
-								mActivity.setConditionsView();
-								break;
-							}
+			String[] items;
+			if (mCondition.getConditionType().getActivityClass() == null) {
+				items = new String[1];
+				items[0] = "Remove";
+			} else {
+				items = new String[2];
+				items[0] = "Remove";
+				items[1] = "Edit";
+			}
+
+			setItems(items, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					AlertDialog ad = (AlertDialog) dialog;
+					switch (which) {
+					case 0:
+						mMonitor.getConditions().remove(mCondition);
+						mActivity.setConditionsView();
+						break;
+					case 1:
+						Class c = mCondition.getConditionType()
+								.getActivityClass();
+						if (c == null) {
+							return;
 						}
-					});
+						Intent i = new Intent(ad.getContext(), c);
+						i.putExtra("org.jtb.httpmon.condition", mCondition);
+						mActivity.startActivityForResult(i,
+								EditMonitorActivity.EDIT_CONDITION_REQUEST);
+						break;
+					}
+				}
+			});
 			setNegativeButton(R.string.cancel,
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {

@@ -12,39 +12,44 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 
-public class EditPingConditionActivity extends Activity {
+public abstract class EditConditionActivity extends Activity {
 	private static final int SAVE_MENU = 0;
 	private static final int CANCEL_MENU = 1;
 
-	private PingCondition mCondition;
-	private EditText mResponseTimeEdit;
+	protected Condition mCondition;
 
-	@Override
+	protected abstract int getLayout();
+
+	protected abstract void initViews();
+
+	protected abstract boolean validateCondition();
+
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.edit_ping_condition);
+		setContentView(getLayout());
 
-		mCondition = savedInstanceState != null ? (PingCondition) savedInstanceState
-				.get("org.jtb.httpmon.condition") : null;
+		mCondition = savedInstanceState != null ? (Condition) savedInstanceState
+				.get("org.jtb.httpmon.condition")
+				: null;
 		if (mCondition == null) {
 			Bundle extras = getIntent().getExtras();
-			mCondition = extras != null ? (PingCondition) extras
+			mCondition = extras != null ? (Condition) extras
 					.get("org.jtb.httpmon.condition") : null;
 		}
 		if (mCondition == null) {
 			ConditionType ct = savedInstanceState != null ? (ConditionType) savedInstanceState
-					.get("org.jtb.httpmon.conditionType") : null;
+					.get("org.jtb.httpmon.conditionType")
+					: null;
 			if (ct == null) {
 				Bundle extras = getIntent().getExtras();
 				ct = extras != null ? (ConditionType) extras
 						.get("org.jtb.httpmon.conditionType") : null;
 			}
 
-			mCondition = (PingCondition)ct.newCondition();
+			mCondition = ct.newCondition();
 		}
 
-		mResponseTimeEdit = (EditText) findViewById(R.id.response_time_edit);
-
+		initViews();
 		setViews();
 	}
 
@@ -58,36 +63,45 @@ public class EditPingConditionActivity extends Activity {
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case SAVE_MENU:
-			setCondition();
+	public void onPause() {
+		super.onPause();
+	}
+
+	private void save() {
+		setCondition();
+		if (validateCondition()) {
 			Intent intent = new Intent();
 			intent.putExtra("org.jtb.httpmon.condition", mCondition);
 			setResult(Activity.RESULT_OK, intent);
 			finish();
+		}
+	}
+
+	private void cancel() {
+		setResult(Activity.RESULT_CANCELED);
+		finish();
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case SAVE_MENU:
+			save();
 			return true;
 		case CANCEL_MENU:
-			setResult(Activity.RESULT_CANCELED);
-			finish();
+			cancel();
 			return true;
 		}
 
 		return super.onOptionsItemSelected(item);
 	}
 
-	private void setCondition() {
-		int rt = Integer.parseInt(mResponseTimeEdit.getText().toString());
-		mCondition.setResponseTimeMilliseconds(rt);
-	}
+	protected abstract void setCondition();
 
-	private void setViews() {
-		mResponseTimeEdit.setText(Long.toString(mCondition.getResponseTimeMilliseconds()));
-	}
+	protected abstract void setViews();
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
 		}
 	}
-
 }

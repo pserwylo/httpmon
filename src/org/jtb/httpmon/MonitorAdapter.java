@@ -43,6 +43,34 @@ public class MonitorAdapter extends ArrayAdapter {
 		TextView nameText = (TextView) view.findViewById(R.id.name_text);
 		nameText.setText(monitor.getName());
 
+		TextView requestText = (TextView) view.findViewById(R.id.request_text);
+		requestText.setText(monitor.getRequest().toString());
+
+		TextView lastText = (TextView) view.findViewById(R.id.last_text);
+		lastText.setText(getFuzzyTime(monitor.getLastUpdatedTime()));
+
 		return view;
+	}
+
+	private String getFuzzyTime(long updated) {
+		if (updated == -1) {
+			return "Never updated";
+		}
+		long now = System.currentTimeMillis();
+		long diff = now - updated;
+
+		long diffHours = diff / (60 * 60 * 1000);
+		if (diffHours > 0) {
+			return "Updated ~" + diffHours + " hours ago";
+		}
+		long diffMins = diff / (60 * 1000);
+		if (diffMins > 0) {
+			return "Updated ~" + diffMins + " minutes ago";
+		}
+		long diffSecs = diff / 1000;
+		if (diffSecs > 0) {
+			return "Updated ~" + diffSecs + " seconds ago";
+		}
+		return "Just updated";
 	}
 }

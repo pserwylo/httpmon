@@ -92,7 +92,6 @@ public class Prefs {
 	public void addMonitor(Monitor monitor) {
 		ArrayList<Monitor> monitors = getMonitors();
 		monitors.add(monitor);
-		monitor.setCreationTime(System.currentTimeMillis());
 		setMonitors(monitors);
 	}
 

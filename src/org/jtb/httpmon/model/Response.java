@@ -5,6 +5,7 @@ public class Response {
 	private String body = null;
 	private int responseCode = -1;
 	private Throwable throwable = null;
+	private boolean alive = false;
 	
 	public void setResponseTime(long responseTime) {
 		this.responseTime = responseTime;
@@ -36,5 +37,13 @@ public class Response {
 
 	public Throwable getThrowable() {
 		return throwable;
+	}
+
+	public void setAlive(boolean alive) {
+		this.alive = alive;
+	}
+
+	public boolean isAlive() {
+		return alive;
 	}
 }

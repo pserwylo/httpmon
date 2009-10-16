@@ -2,6 +2,8 @@ package org.jtb.httpmon;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.jtb.httpmon.model.Monitor;
 
@@ -22,12 +24,14 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 
 public class ManageMonitorsActivity extends Activity {
 	private static final int NEW_MONITOR_MENU = 0;
-	private static final int STOP_ALL_MENU = 1;
+	private static final int START_ALL_MENU = 1;
+	private static final int STOP_ALL_MENU = 2;
 
 	static final int NEW_MONITOR_REQUEST = 0;
 	static final int EDIT_MONITOR_REQUEST = 1;
@@ -37,6 +41,16 @@ public class ManageMonitorsActivity extends Activity {
 	private ManageMonitorsActivity mThis;
 	private TextView mEmptyListText;
 	private ManageMonitorsReceiver mReceiver;
+	private Monitor mEditMonitor;
+	private Timer mUpdateTimer;
+	
+	public Monitor getEditMonitor() {
+		return mEditMonitor;
+	}
+
+	public void setEditMonitor(Monitor mEditMonitor) {
+		this.mEditMonitor = mEditMonitor;
+	}
 
 	private AlertDialog mMonitorClickDialog;
 
@@ -47,15 +61,15 @@ public class ManageMonitorsActivity extends Activity {
 
 		mThis = this;
 		mReceiver = new ManageMonitorsReceiver(this);
-		
+
 		mMonitorList = (ListView) findViewById(R.id.monitor_list);
 		mMonitorList.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View v,
 					int position, long id) {
-				Monitor monitor = mMonitors.get(position);
+				mEditMonitor = mMonitors.get(position);
+				stopMonitor(mEditMonitor);
 				Intent intent = new Intent(mThis, EditMonitorActivity.class);
-				intent.putExtra("org.jtb.httpmon.monitor", monitor);
-				intent.putExtra("org.jtb.httpmon.new", false);
+				intent.putExtra("org.jtb.httpmon.monitor", mEditMonitor);
 				startActivityForResult(intent, EDIT_MONITOR_REQUEST);
 			}
 		});
@@ -71,8 +85,6 @@ public class ManageMonitorsActivity extends Activity {
 		});
 
 		mEmptyListText = (TextView) findViewById(R.id.empty_list_text);
-
-		update();
 	}
 
 	@Override
@@ -80,7 +92,9 @@ public class ManageMonitorsActivity extends Activity {
 		boolean result = super.onCreateOptionsMenu(menu);
 		menu.add(0, NEW_MONITOR_MENU, 0, R.string.new_monitor_menu).setIcon(
 				R.drawable.add);
-		menu.add(0, STOP_ALL_MENU, 0, R.string.stop_all_menu).setIcon(
+		menu.add(0, START_ALL_MENU, 1, R.string.start_all_menu).setIcon(
+				R.drawable.upload);
+		menu.add(0, STOP_ALL_MENU, 2, R.string.stop_all_menu).setIcon(
 				R.drawable.cancel);
 		return result;
 	}
@@ -96,14 +110,23 @@ public class ManageMonitorsActivity extends Activity {
 		case STOP_ALL_MENU:
 			stopAll();
 			return true;
+		case START_ALL_MENU:
+			startAll();
+			return true;
 		}
 
 		return super.onOptionsItemSelected(item);
 	}
-	
+
 	private void stopAll() {
 		for (int i = 0; i < mMonitors.size(); i++) {
 			stopMonitor(mMonitors.get(i));
+		}
+	}
+
+	private void startAll() {
+		for (int i = 0; i < mMonitors.size(); i++) {
+			startMonitor(mMonitors.get(i));
 		}
 	}
 
@@ -116,6 +139,12 @@ public class ManageMonitorsActivity extends Activity {
 				Prefs prefs = new Prefs(this);
 				prefs.addMonitor(monitor);
 				update();
+				Toast.makeText(this, "New monitor saved.", Toast.LENGTH_LONG)
+						.show();
+			} else {
+				Toast
+						.makeText(this, "New monitor canceled.",
+								Toast.LENGTH_LONG).show();
 			}
 			break;
 		case EDIT_MONITOR_REQUEST:
@@ -127,11 +156,26 @@ public class ManageMonitorsActivity extends Activity {
 					startMonitor(monitor);
 				}
 				Prefs prefs = new Prefs(this);
-				prefs.setMonitor(monitor);
+				prefs.removeMonitor(mEditMonitor);
+				prefs.addMonitor(monitor);
 				update();
+				Toast.makeText(this, "Monitor saved.", Toast.LENGTH_LONG)
+						.show();
+			} else {
+				Toast.makeText(this, "Edit monitor canceled.",
+						Toast.LENGTH_LONG).show();
 			}
 			break;
 		}
+	}
+
+	private void setAllStopped() {
+		Prefs prefs = new Prefs(this);
+		ArrayList<Monitor> monitors = prefs.getMonitors();
+		for (int i = 0; i < monitors.size(); i++) {
+			monitors.get(i).setState(Monitor.STATE_STOPPED);
+		}
+		prefs.setMonitors(monitors);
 	}
 
 	void update() {
@@ -154,38 +198,45 @@ public class ManageMonitorsActivity extends Activity {
 	public void onPause() {
 		super.onPause();
 		unregisterReceiver(mReceiver);
+		mUpdateTimer.cancel();
 		Log.d(getClass().getSimpleName(), "paused");
 	}
-	
+
 	@Override
 	public void onResume() {
 		super.onResume();
 
+		setAllStopped();
 		update();
 
 		registerReceiver(mReceiver, new IntentFilter("ManageMonitors.update"));
 		Log.d(getClass().getSimpleName(), "resumed");
-	
+
+		mUpdateTimer = new Timer();
+		mUpdateTimer.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				sendBroadcast(new Intent("ManageMonitors.update"));
+			}
+		}, 10 * 1000, 10 * 1000);
 	}
-	
+
 	void stopMonitor(Monitor monitor) {
 		AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		Intent i = new Intent(monitor.getName(), null, this,
-				MonitorService.class);
-		PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
-		mgr.cancel(pi);		
+				MonitorReceiver.class);
+		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, 0);
+		mgr.cancel(pi);
 		monitor.setState(Monitor.STATE_STOPPED);
 		Prefs prefs = new Prefs(this);
 		prefs.setMonitor(monitor);
 		update();
 	}
-	
+
 	void startMonitor(Monitor monitor) {
 		AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		Intent i = new Intent(monitor.getName(), null, this,
-				MonitorService.class);
-		i.putExtra("org.jtb.httpmon.monitor.name", monitor.getName());
-		PendingIntent pi = PendingIntent.getService(this, 0, i, 0);
+				MonitorReceiver.class);
+		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, 0);
 		mgr.cancel(pi);
 		mgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock
 				.elapsedRealtime(), monitor.getRequest().getInterval() * 1000,
