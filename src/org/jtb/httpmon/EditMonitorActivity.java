@@ -1,5 +1,7 @@
 package org.jtb.httpmon;
 
+import org.jtb.httpmon.model.Action;
+import org.jtb.httpmon.model.ActionType;
 import org.jtb.httpmon.model.Condition;
 import org.jtb.httpmon.model.ConditionType;
 import org.jtb.httpmon.model.Monitor;
@@ -30,7 +32,9 @@ public class EditMonitorActivity extends Activity {
 
 	private static final int EDIT_REQUEST_REQUEST = 0;
 	private static final int NEW_CONDITION_REQUEST = 1;
-	static final int EDIT_CONDITION_REQUEST = 2;
+	private static final int NEW_ACTION_REQUEST = 2;
+	static final int EDIT_CONDITION_REQUEST = 3;
+	static final int EDIT_ACTION_REQUEST = 4;
 
 	private Monitor mMonitor;
 	private EditText mNameEdit;
@@ -39,11 +43,17 @@ public class EditMonitorActivity extends Activity {
 	private TextView mEmptyRequestText;
 	private EditMonitorActivity mThis;
 	private ListView mConditionList;
+	private ListView mActionList;
 	private Button mAddConditionButton;
+	private Button mAddActionButton;
 	private TextView mEmptyConditionsText;
+	private TextView mEmptyActionsText;
 	private Spinner mConditionsSpinner;
+	private Spinner mActionsSpinner;
 	private AlertDialog mConditionClickDialog;
+	private AlertDialog mActionClickDialog;
 	private Condition mEditCondition;
+	private Action mEditAction;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -66,6 +76,7 @@ public class EditMonitorActivity extends Activity {
 		mNameEdit = (EditText) findViewById(R.id.name_edit);
 		mRequestText = (TextView) findViewById(R.id.request_text);
 		mEmptyRequestText = (TextView) findViewById(R.id.empty_request_text);
+		mEmptyActionsText = (TextView) findViewById(R.id.empty_actions_text);
 		mEmptyConditionsText = (TextView) findViewById(R.id.empty_conditions_text);
 
 		mConditionList = (ListView) findViewById(R.id.condition_list);
@@ -96,6 +107,33 @@ public class EditMonitorActivity extends Activity {
 					}
 				});
 
+		mActionList = (ListView) findViewById(R.id.action_list);
+		mActionList.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View v,
+					int position, long id) {
+				mEditAction = mMonitor.getActions().get(position);
+				Class c = mEditAction.getActionType().getActivityClass();
+				if (c == null) {
+					return;
+				}
+				Intent intent = new Intent(mThis, mEditAction.getActionType()
+						.getActivityClass());
+				intent.putExtra("org.jtb.httpmon.action", mEditAction);
+				startActivityForResult(intent, EDIT_ACTION_REQUEST);
+			}
+		});
+		mActionList.setOnItemLongClickListener(new OnItemLongClickListener() {
+			public boolean onItemLongClick(AdapterView<?> parent, View v,
+					int position, long id) {
+				mEditAction = mMonitor.getActions().get(position);
+				AlertDialog.Builder builder = new ActionClickDialog.Builder(
+						mThis, mMonitor, position);
+				mActionClickDialog = builder.create();
+				mActionClickDialog.show();
+				return true;
+			}
+		});
+
 		mAddConditionButton = (Button) findViewById(R.id.add_condition_button);
 		mAddConditionButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -114,6 +152,23 @@ public class EditMonitorActivity extends Activity {
 			}
 		});
 
+		mAddActionButton = (Button) findViewById(R.id.add_action_button);
+		mAddActionButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				ActionType at = (ActionType) mActionsSpinner.getSelectedItem();
+				Class c = at.getActivityClass();
+				if (c == null) {
+					Action action = at.newAction();
+					mMonitor.getActions().add(action);
+					setActionsView();
+				} else {
+					Intent intent = new Intent(mThis, at.getActivityClass());
+					intent.putExtra("org.jtb.httpmon.actionType", at);
+					startActivityForResult(intent, NEW_ACTION_REQUEST);
+				}
+			}
+		});
+
 		mEditRequestButton = (Button) findViewById(R.id.edit_request_button);
 		mEditRequestButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -125,15 +180,23 @@ public class EditMonitorActivity extends Activity {
 		});
 
 		mConditionsSpinner = (Spinner) findViewById(R.id.conditions_spinner);
-		ArrayAdapter<ConditionType> aa = new ArrayAdapter<ConditionType>(this,
+		ArrayAdapter<ConditionType> caa = new ArrayAdapter<ConditionType>(this,
 				android.R.layout.simple_spinner_item, ConditionType.TYPES);
-		aa
+		caa
 				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		mConditionsSpinner.setAdapter(aa);
+		mConditionsSpinner.setAdapter(caa);
+
+		mActionsSpinner = (Spinner) findViewById(R.id.actions_spinner);
+		ArrayAdapter<ActionType> aaa = new ArrayAdapter<ActionType>(this,
+				android.R.layout.simple_spinner_item, ActionType.TYPES);
+		aaa
+				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mActionsSpinner.setAdapter(aaa);
 
 		setNameView();
 		setRequestView();
 		setConditionsView();
+		setActionsView();
 	}
 
 	@Override
@@ -180,6 +243,14 @@ public class EditMonitorActivity extends Activity {
 	}
 
 	private boolean validateMonitor() {
+		if (mMonitor.getActions().size() == 0) {
+			Toast
+					.makeText(
+							this,
+							"You did not add any actions. No action will be taken when this monitor is invalid.",
+							Toast.LENGTH_LONG).show();
+		}
+
 		if (mMonitor.getName() == null || mMonitor.getName().length() == 0) {
 			Toast.makeText(this, "Please give your monitor a name first.",
 					Toast.LENGTH_LONG).show();
@@ -221,6 +292,19 @@ public class EditMonitorActivity extends Activity {
 		}
 	}
 
+	void setActionsView() {
+		if (mMonitor.getActions().size() == 0) {
+			mActionList.setVisibility(View.GONE);
+			mEmptyActionsText.setVisibility(View.VISIBLE);
+		} else {
+			mActionList.setVisibility(View.VISIBLE);
+			mEmptyActionsText.setVisibility(View.GONE);
+			ActionAdapter aa = new ActionAdapter(this, mMonitor
+					.getActions());
+			mActionList.setAdapter(aa);
+		}
+	}
+
 	private void setRequestView() {
 		if (mMonitor.getRequest() == null) {
 			mRequestText.setVisibility(View.GONE);
@@ -250,6 +334,14 @@ public class EditMonitorActivity extends Activity {
 				setConditionsView();
 			}
 			break;
+		case NEW_ACTION_REQUEST:
+			if (resultCode == Activity.RESULT_OK) {
+				Action action = (Action) data
+						.getSerializableExtra("org.jtb.httpmon.action");
+				mMonitor.getActions().add(action);
+				setActionsView();
+			}
+			break;
 		case EDIT_CONDITION_REQUEST:
 			if (resultCode == Activity.RESULT_OK) {
 				Condition condition = (Condition) data
@@ -257,6 +349,15 @@ public class EditMonitorActivity extends Activity {
 				mMonitor.getConditions().remove(mEditCondition);
 				mMonitor.getConditions().add(condition);
 				setConditionsView();
+			}
+			break;
+		case EDIT_ACTION_REQUEST:
+			if (resultCode == Activity.RESULT_OK) {
+				Action action = (Action) data
+						.getSerializableExtra("org.jtb.httpmon.action");
+				mMonitor.getActions().remove(mEditAction);
+				mMonitor.getActions().add(action);
+				setActionsView();
 			}
 			break;
 		}

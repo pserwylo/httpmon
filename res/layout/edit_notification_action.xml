@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="wrap_content">
+	<LinearLayout android:orientation="vertical"
+		android:layout_margin="5px" android:padding="5px" android:background="#aaaaaa"
+		android:layout_width="fill_parent" android:layout_height="wrap_content">
+		<TextView android:layout_width="fill_parent"
+			android:textStyle="bold" android:textColor="#ffffff"
+			android:layout_height="wrap_content" android:text="Notify every" />
+		<EditText android:id="@+id/interval_edit"
+			android:layout_gravity="left" android:digits="0123456789"
+			android:layout_width="fill_parent" android:layout_height="wrap_content" />
+		<TextView android:layout_width="fill_parent"
+			android:textStyle="bold" android:textColor="#ffffff"
+			android:layout_height="wrap_content" android:text="minutes if this monitor is invalid." />
+	</LinearLayout>
+</LinearLayout>

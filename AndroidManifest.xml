@@ -13,6 +13,7 @@
 		<activity android:name=".EditMonitorActivity" android:label="httpmon - Edit Monitor" />
 		<activity android:name=".EditRequestActivity" android:label="httpmon - Edit Request" />
 		<activity android:name=".EditResponseTimeConditionActivity" android:label="httpmon - Edit Ping Condition" />
+		<activity android:name=".EditNotificationActionActivity" android:label="httpmon - Edit Notification Action" />
 		<service android:name=".MonitorService"/>
 		<receiver android:name=".ManageMonitorsReceiver"/>
 		<receiver android:name=".WakeLockReceiver"/>

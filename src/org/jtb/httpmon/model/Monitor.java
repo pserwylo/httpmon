@@ -20,6 +20,7 @@ public class Monitor implements Serializable, Comparable<Monitor> {
 	private String name;
 	private Request request;
 	private ArrayList<Condition> conditions = new ArrayList<Condition>();
+	private ArrayList<Action> actions = new ArrayList<Action>();
 	private int state = STATE_STOPPED;
 	private long creationTime = -1;
 	private long lastUpdatedTime = -1;
@@ -46,6 +47,17 @@ public class Monitor implements Serializable, Comparable<Monitor> {
 					Condition condition = ConditionType
 							.newCondition(conditionObject);
 					conditions.add(condition);
+				}
+			}
+
+			JSONArray actionArray = jo.getJSONArray("actions");
+			if (actionArray != null) {
+				for (int i = 0; i < actionArray.length(); i++) {
+					JSONObject actionObject = actionArray
+							.getJSONObject(i);
+					Action action = ActionType
+							.newAction(actionObject);
+					actions.add(action);
 				}
 			}
 		} catch (JSONException e) {
@@ -104,6 +116,13 @@ public class Monitor implements Serializable, Comparable<Monitor> {
 				conditionArray.put(conditionObject);
 			}
 			jo.put("conditions", conditionArray);
+
+			JSONArray actionArray = new JSONArray();
+			for (int i = 0; i < actions.size(); i++) {
+				JSONObject actionObject = actions.get(i).toJSONObject();
+				actionArray.put(actionObject);
+			}
+			jo.put("actions", actionArray);
 			return jo;
 		} catch (JSONException e) {
 			throw new RuntimeException(e);
@@ -173,5 +192,9 @@ public class Monitor implements Serializable, Comparable<Monitor> {
 
 	public long getLastUpdatedTime() {
 		return lastUpdatedTime;
+	}
+
+	public ArrayList<Action> getActions() {
+		return actions;
 	}
 }
