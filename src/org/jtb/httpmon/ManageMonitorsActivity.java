@@ -262,6 +262,7 @@ public class ManageMonitorsActivity extends Activity {
 
 		registerReceiver(mReceiver, new IntentFilter("ManageMonitors.update"));
 		removeRunningNotification();
+		update();
 		mUpdateTimer = new Timer();
 		mUpdateTimer.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
