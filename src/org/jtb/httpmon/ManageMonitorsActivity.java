@@ -11,6 +11,8 @@ import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -29,6 +31,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 
 public class ManageMonitorsActivity extends Activity {
+	private static final int NOTIFY_RUNNING = 100;
+
 	private static final int NEW_MONITOR_MENU = 0;
 	private static final int START_ALL_MENU = 1;
 	private static final int STOP_ALL_MENU = 2;
@@ -45,7 +49,7 @@ public class ManageMonitorsActivity extends Activity {
 	private ManageMonitorsReceiver mReceiver;
 	private Monitor mEditMonitor;
 	private Timer mUpdateTimer;
-	
+
 	public Monitor getEditMonitor() {
 		return mEditMonitor;
 	}
@@ -89,7 +93,6 @@ public class ManageMonitorsActivity extends Activity {
 		mEmptyListText = (TextView) findViewById(R.id.empty_list_text);
 
 		setAllStopped();
-		update();
 	}
 
 	@Override
@@ -212,7 +215,45 @@ public class ManageMonitorsActivity extends Activity {
 		super.onPause();
 		unregisterReceiver(mReceiver);
 		mUpdateTimer.cancel();
+		addRunningNotification();
 		Log.d(getClass().getSimpleName(), "paused");
+	}
+
+	private void removeRunningNotification() {
+		NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		nm.cancel(NOTIFY_RUNNING);
+	}
+
+	private void addRunningNotification() {
+		int runCount = 0;
+		for (int i = 0; mMonitors != null && i < mMonitors.size(); i++) {
+			if (mMonitors.get(i).getState() != Monitor.STATE_STOPPED) {
+				runCount++;
+			}
+		}
+
+		if (runCount > 0) {
+			NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+			int icon = android.R.drawable.stat_notify_sync;
+			CharSequence tickerText = runCount + " monitor(s) running";
+
+			Notification notification = new Notification(icon, tickerText,
+					System.currentTimeMillis());
+			notification.flags |= Notification.FLAG_ONGOING_EVENT|Notification.FLAG_NO_CLEAR;
+
+			CharSequence contentTitle = tickerText;
+			CharSequence contentText = "Click to manage";
+
+			Intent notificationIntent = new Intent(this,
+					ManageMonitorsActivity.class);
+			PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+					notificationIntent, 0);
+
+			notification.setLatestEventInfo(this, contentTitle, contentText,
+					contentIntent);
+			nm.notify(NOTIFY_RUNNING, notification);
+		}
 	}
 
 	@Override
@@ -220,21 +261,22 @@ public class ManageMonitorsActivity extends Activity {
 		super.onResume();
 
 		registerReceiver(mReceiver, new IntentFilter("ManageMonitors.update"));
-		Log.d(getClass().getSimpleName(), "resumed");
-
+		removeRunningNotification();
 		mUpdateTimer = new Timer();
 		mUpdateTimer.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
 				sendBroadcast(new Intent("ManageMonitors.update"));
 			}
-		}, 10 * 1000, 10 * 1000);
+		}, 15 * 1000, 15 * 1000);
+		Log.d(getClass().getSimpleName(), "resumed");
 	}
 
 	void stopMonitor(Monitor monitor) {
 		AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		Intent i = new Intent(monitor.getName(), null, this,
 				MonitorReceiver.class);
-		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, PendingIntent.FLAG_CANCEL_CURRENT);
+		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i,
+				PendingIntent.FLAG_CANCEL_CURRENT);
 		mgr.cancel(pi);
 		monitor.setState(Monitor.STATE_STOPPED);
 		Prefs prefs = new Prefs(this);
@@ -246,7 +288,8 @@ public class ManageMonitorsActivity extends Activity {
 		AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		Intent i = new Intent(monitor.getName(), null, this,
 				MonitorReceiver.class);
-		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, PendingIntent.FLAG_CANCEL_CURRENT);
+		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i,
+				PendingIntent.FLAG_CANCEL_CURRENT);
 		mgr.cancel(pi);
 		mgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock
 				.elapsedRealtime(), monitor.getRequest().getInterval() * 1000,

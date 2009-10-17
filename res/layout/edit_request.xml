@@ -18,7 +18,7 @@
 			android:textStyle="bold" android:textColor="#ffffff"
 			android:layout_height="wrap_content" android:text="Interval (seconds)" />
 		<EditText android:id="@+id/interval_edit"
-			android:layout_gravity="left" android:digits="0123456789"
+			android:layout_gravity="left" android:numeric="integer"
 			android:layout_width="fill_parent" android:layout_height="wrap_content" />
 	</LinearLayout>
 </LinearLayout>

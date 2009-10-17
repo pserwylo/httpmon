@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.jtb.httpmon.model.Action;
 import org.jtb.httpmon.model.Monitor;
 import org.jtb.httpmon.model.Request;
 import org.jtb.httpmon.model.Response;
@@ -55,6 +56,15 @@ public class MonitorService extends IntentService {
 			if (monitor != null && monitor.getState() != Monitor.STATE_STOPPED) {
 				monitor.setState(state);
 				monitor.setLastUpdatedTime();
+				
+				for (int i = 0; i < monitor.getActions().size(); i++) {
+					Action action = monitor.getActions().get(i);
+					if (monitor.getState() == Monitor.STATE_INVALID) {
+						action.failure(this, monitor);
+					} else if (monitor.getState() == Monitor.STATE_VALID) {
+						action.success(this, monitor);
+					}
+				}
 				prefs.setMonitor(monitor);
 				sendBroadcast(new Intent("ManageMonitors.update"));
 			}

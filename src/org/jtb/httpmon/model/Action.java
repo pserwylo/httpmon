@@ -5,6 +5,8 @@ import java.io.Serializable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
+
 public abstract class Action implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -25,7 +27,8 @@ public abstract class Action implements Serializable {
 	}
 	
 	public abstract void init(JSONObject jo);	
-	public abstract void perform(Monitor monitor);
+	public abstract void success(Context context, Monitor monitor);
+	public abstract void failure(Context context, Monitor monitor);
 
 	public ActionType getActionType() {
 		return actionType;
