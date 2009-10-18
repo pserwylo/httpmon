@@ -91,7 +91,9 @@ public class ContentContainsCondition extends Condition {
 	}
 
 	private boolean isMatchesSubstring(String content) {
-		return isMatchesRegex(content);
+		String c = content.toLowerCase();
+		String p = pattern.toLowerCase();
+		return c.contains(p);
 	}
 	
 	private boolean isMatchesWildcard(String content) {

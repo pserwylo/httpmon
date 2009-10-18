@@ -30,8 +30,7 @@
 				android:layout_height="wrap_content" android:text="consecutive failures." />
 		</LinearLayout>
 		<TextView android:layout_width="fill_parent"
-			android:textColor="#ffffff"
 			android:paddingTop="10px"
-			android:layout_height="wrap_content" android:text="This could cost you money!" />
+			android:layout_height="wrap_content" android:text="@string/edit_sms_action_help" />
 	</LinearLayout>
 </ScrollView>

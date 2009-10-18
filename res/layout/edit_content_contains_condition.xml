@@ -27,6 +27,6 @@
 		</RadioGroup>
 	</LinearLayout>
 	<TextView android:layout_width="fill_parent"
-		android:autoLink="web"
-		android:layout_height="wrap_content" android:text="@string/edit_content_contains_help" />
+		android:paddingTop="10px" android:autoLink="web"
+		android:layout_height="wrap_content" android:text="@string/edit_content_contains_condition_help" />
 </LinearLayout>

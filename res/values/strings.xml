@@ -9,5 +9,7 @@
 <string name="stop_all_menu">Stop All</string>
 <string name="start_all_menu">Start All</string>
 <string name="preferences_menu">Preferences</string>
-<string name="edit_content_contains_help">All matching is case-insensitive. Regular expressions must be specified per the Java Pattern specification (and must be duly escaped). See http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html for details.</string>
+<string name="edit_response_time_condition_help">Response times can be affected by your wireless network quality.</string>
+<string name="edit_sms_action_help">Sending text messages may cause additional monetary charges. Review your service plan before using this action.</string>
+<string name="edit_content_contains_condition_help">All matching is case-insensitive. Regular expressions must be specified per the Java Pattern specification (and must be duly escaped). See http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html for details.</string>
 </resources>

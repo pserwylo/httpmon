@@ -15,4 +15,7 @@
 			android:textStyle="bold" android:textColor="#ffffff"
 			android:layout_height="wrap_content" android:text="milliseconds" />
 	</LinearLayout>
+	<TextView android:layout_width="fill_parent"
+		android:paddingTop="10px" android:autoLink="web"
+		android:layout_height="wrap_content" android:text="@string/edit_response_time_condition_help" />
 </LinearLayout>
