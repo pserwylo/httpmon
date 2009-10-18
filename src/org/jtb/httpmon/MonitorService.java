@@ -107,7 +107,7 @@ public class MonitorService extends IntentService {
 				body.append('\n');
 			}
 			response.setResponseTime(timer.getElapsed());
-			response.setBody(body.toString());
+			response.setContent(body.toString());
 		} catch (Throwable t) {
 			response.setThrowable(t);
 		} finally {

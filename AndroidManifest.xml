@@ -13,7 +13,9 @@
 		<activity android:name=".EditMonitorActivity" android:label="httpmon - Edit Monitor" />
 		<activity android:name=".EditRequestActivity" android:label="httpmon - Edit Request" />
 		<activity android:name=".EditResponseTimeConditionActivity"
-			android:label="httpmon - Edit Ping Condition" />
+			android:label="httpmon - Edit Response Time Condition" />
+		<activity android:name=".EditContentContainsConditionActivity"
+			android:label="httpmon - Edit Content Contains Condition" />
 		<activity android:name=".EditNotificationActionActivity"
 			android:label="httpmon - Edit Notification Action" />
 		<activity android:name=".EditSmsActionActivity"

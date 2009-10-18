@@ -9,4 +9,5 @@
 <string name="stop_all_menu">Stop All</string>
 <string name="start_all_menu">Start All</string>
 <string name="preferences_menu">Preferences</string>
+<string name="edit_content_contains_help">All matching is case-insensitive. Regular expressions must be specified per the Java Pattern specification (and must be duly escaped). See http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html for details.</string>
 </resources>
