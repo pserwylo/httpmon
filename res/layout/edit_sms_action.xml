@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="wrap_content">
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:orientation="vertical" android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+		<LinearLayout android:orientation="vertical"
+			android:layout_margin="5px" android:padding="5px" android:background="#aaaaaa"
+			android:layout_width="fill_parent" android:layout_height="wrap_content">
+			<TextView android:layout_width="fill_parent"
+				android:textStyle="bold" android:textColor="#ffffff"
+				android:layout_height="wrap_content" android:text="Send text message to phone number" />
+			<EditText android:id="@+id/phone_edit"
+				android:layout_gravity="left" android:numeric="integer"
+				android:layout_width="fill_parent" android:layout_height="wrap_content" />
+			<TextView android:layout_width="fill_parent"
+				android:textStyle="bold" android:textColor="#ffffff"
+				android:layout_height="wrap_content" android:text="every" />
+			<EditText android:id="@+id/interval_edit"
+				android:layout_gravity="left" android:numeric="integer"
+				android:layout_width="fill_parent" android:layout_height="wrap_content" />
+			<TextView android:layout_width="fill_parent"
+				android:textStyle="bold" android:textColor="#ffffff"
+				android:layout_height="wrap_content" android:text="minutes, after" />
+			<EditText android:id="@+id/failure_edit"
+				android:layout_gravity="left" android:numeric="integer"
+				android:layout_width="fill_parent" android:layout_height="wrap_content" />
+			<TextView android:layout_width="fill_parent"
+				android:textStyle="bold" android:textColor="#ffffff"
+				android:layout_height="wrap_content" android:text="consecutive failures." />
+		</LinearLayout>
+		<TextView android:layout_width="fill_parent"
+			android:textColor="#ffffff"
+			android:paddingTop="10px"
+			android:layout_height="wrap_content" android:text="This could cost you money!" />
+	</LinearLayout>
+</ScrollView>

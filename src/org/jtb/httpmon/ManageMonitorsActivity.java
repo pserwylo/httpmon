@@ -14,6 +14,7 @@ import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -91,8 +92,6 @@ public class ManageMonitorsActivity extends Activity {
 		});
 
 		mEmptyListText = (TextView) findViewById(R.id.empty_list_text);
-
-		setAllStopped();
 	}
 
 	@Override
@@ -144,6 +143,14 @@ public class ManageMonitorsActivity extends Activity {
 		}
 	}
 
+	private void restartAll() {
+		for (int i = 0; i < mMonitors.size(); i++) {
+			if (mMonitors.get(i).getState() != Monitor.STATE_STOPPED) {
+				startMonitor(mMonitors.get(i));
+			}
+		}
+	}
+
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
 		case PREFS_REQUEST:
@@ -185,15 +192,6 @@ public class ManageMonitorsActivity extends Activity {
 		}
 	}
 
-	private void setAllStopped() {
-		Prefs prefs = new Prefs(this);
-		ArrayList<Monitor> monitors = prefs.getMonitors();
-		for (int i = 0; i < monitors.size(); i++) {
-			monitors.get(i).setState(Monitor.STATE_STOPPED);
-		}
-		prefs.setMonitors(monitors);
-	}
-
 	void update() {
 		Prefs prefs = new Prefs(this);
 		mMonitors = prefs.getMonitors();
@@ -216,9 +214,28 @@ public class ManageMonitorsActivity extends Activity {
 		unregisterReceiver(mReceiver);
 		mUpdateTimer.cancel();
 		addRunningNotification();
+		
 		Log.d(getClass().getSimpleName(), "paused");
 	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
 
+		registerReceiver(mReceiver, new IntentFilter("ManageMonitors.update"));
+		removeRunningNotification();
+		update();
+		restartAll();
+		mUpdateTimer = new Timer();
+		mUpdateTimer.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				sendBroadcast(new Intent("ManageMonitors.update"));
+			}
+		}, 15 * 1000, 15 * 1000);
+		
+		Log.d(getClass().getSimpleName(), "resumed");
+	}
+	
 	private void removeRunningNotification() {
 		NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		nm.cancel(NOTIFY_RUNNING);
@@ -240,7 +257,8 @@ public class ManageMonitorsActivity extends Activity {
 
 			Notification notification = new Notification(icon, tickerText,
 					System.currentTimeMillis());
-			notification.flags |= Notification.FLAG_ONGOING_EVENT|Notification.FLAG_NO_CLEAR;
+			notification.flags |= Notification.FLAG_ONGOING_EVENT
+					| Notification.FLAG_NO_CLEAR;
 
 			CharSequence contentTitle = tickerText;
 			CharSequence contentText = "Click to manage";
@@ -254,22 +272,6 @@ public class ManageMonitorsActivity extends Activity {
 					contentIntent);
 			nm.notify(NOTIFY_RUNNING, notification);
 		}
-	}
-
-	@Override
-	public void onResume() {
-		super.onResume();
-
-		registerReceiver(mReceiver, new IntentFilter("ManageMonitors.update"));
-		removeRunningNotification();
-		update();
-		mUpdateTimer = new Timer();
-		mUpdateTimer.scheduleAtFixedRate(new TimerTask() {
-			public void run() {
-				sendBroadcast(new Intent("ManageMonitors.update"));
-			}
-		}, 15 * 1000, 15 * 1000);
-		Log.d(getClass().getSimpleName(), "resumed");
 	}
 
 	void stopMonitor(Monitor monitor) {

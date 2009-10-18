@@ -33,7 +33,7 @@ public class MonitorAdapter extends ArrayAdapter {
 			id = R.drawable.invalid;
 		} else if (state == Monitor.STATE_VALID) {
 			id = R.drawable.valid;
-		} else if (state == Monitor.STATE_RUNNING) {
+		} else if (state == Monitor.STATE_RUNNING || state == Monitor.STATE_STARTED) {
 			id = R.drawable.running;
 		} else {
 			id = R.drawable.stopped;

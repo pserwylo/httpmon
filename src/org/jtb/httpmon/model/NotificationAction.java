@@ -70,7 +70,15 @@ public class NotificationAction extends Action {
 			notification.ledOnMS = 250;
 			notification.ledARGB = Color.parseColor("#DC143C");
 		}
+		
+		if (alertNotification) {
+			notification.flags |= Notification.DEFAULT_SOUND;
+		}
 
+		if (vibrateNotification) {
+			notification.vibrate = new long[] { 250, 100, 250, 100, 250, 100, 250, 100, 250 };
+		}
+		
 		CharSequence contentTitle = "Monitor failed: " + monitor.getName();
 		CharSequence contentText = monitor.getRequest().toString();
 
@@ -81,7 +89,7 @@ public class NotificationAction extends Action {
 
 		notification.setLatestEventInfo(context, contentTitle, contentText,
 				contentIntent);
-		nm.notify(0, notification);
+		nm.notify(monitor.getName().hashCode(), notification);
 	}
 
 	@Override

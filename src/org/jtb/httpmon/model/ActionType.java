@@ -8,7 +8,8 @@ import org.json.JSONObject;
 public abstract class ActionType implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public static final ActionType[] TYPES = new ActionType[] {
-		new NotificationActionType()
+		new NotificationActionType(),
+		new SmsActionType()
 	};
 	
 	public abstract Action newAction();

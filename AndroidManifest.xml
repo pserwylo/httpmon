@@ -16,12 +16,26 @@
 			android:label="httpmon - Edit Ping Condition" />
 		<activity android:name=".EditNotificationActionActivity"
 			android:label="httpmon - Edit Notification Action" />
+		<activity android:name=".EditSmsActionActivity"
+			android:label="httpmon - Edit SMS Action" />
 		<service android:name=".MonitorService" />
 		<receiver android:name=".ManageMonitorsReceiver" />
 		<receiver android:name=".WakeLockReceiver" />
 		<receiver android:name=".MonitorReceiver" />
+		<receiver android:name=".SmsSentReceiver">
+			<intent-filter>
+				<action android:name="sms_sent" />
+			</intent-filter>
+		</receiver>
+		<receiver android:name=".SmsDeliveredReceiver">
+			<intent-filter>
+				<action android:name="sms_delivered" />
+			</intent-filter>
+		</receiver>
 	</application>
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.VIBRATE" />
+	<uses-permission android:name="android.permission.SEND_SMS" />
 	<uses-sdk android:minSdkVersion="4" />
 </manifest> 
