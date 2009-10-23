@@ -1,3 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+	<string-array name="useragent_values">
+		<item></item>
+		<item>Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.5; en-US; rv:1.9.1.3) Gecko/20090824 Firefox/3.5.3</item>
+		<item>Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.20) Gecko/20081217 Firefox/2.0.0.20</item>
+		<item>Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_5_8; en-us) AppleWebKit/531.9 (KHTML, like Gecko) Version/4.0.3 Safari/531.9</item>
+		<item>Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 2.0.50727)</item>
+	</string-array>
+	<string-array name="useragent_entries">
+		<item>Default (unset)</item>
+		<item>Firefox/3.5.3</item>
+		<item>Firefox/2.0.0.20</item>
+		<item>Safari/4.0.3</item>
+		<item>IE/7.0</item>
+	</string-array>
+	<string-array name="test_conditions">
+		<item>Some condition number 1</item>
+		<item>Some condition number 2</item>
+		<item>Some condition number 3, but this one is long</item>
+		<item>Some condition number 4</item>
+		<item>Some condition number 5, another really, really long condition</item>
+	</string-array>
 </resources>

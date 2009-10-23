@@ -43,7 +43,7 @@ public class Prefs {
 		return f;
 	}
 
-	public long getLong(String key, long def) {
+	private long getLong(String key, long def) {
 		SharedPreferences prefs = PreferenceManager
 				.getDefaultSharedPreferences(context);
 		long l = Long.parseLong(prefs.getString(key, Long.toString(def)));
@@ -91,6 +91,10 @@ public class Prefs {
 
 	public int getTimeout() {
 		return getInt("timeout", 30);
+	}
+	
+	public String getUserAgent() {
+		return getString("userAgent", "");
 	}
 	
 	public void addMonitor(Monitor monitor) {

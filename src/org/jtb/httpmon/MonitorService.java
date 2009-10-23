@@ -42,8 +42,7 @@ public class MonitorService extends IntentService {
 			prefs.setMonitor(monitor);
 			sendBroadcast(new Intent("ManageMonitors.update"));
 
-			int timeout = prefs.getTimeout();
-			Response response = getResponse(monitor.getRequest(), timeout);
+			Response response = getResponse(monitor.getRequest());
 			int state = Monitor.STATE_VALID;
 			for (int i = 0; i < monitor.getConditions().size(); i++) {
 				if (!monitor.getConditions().get(i).isValid(response)) {
@@ -56,7 +55,7 @@ public class MonitorService extends IntentService {
 			if (monitor != null && monitor.getState() != Monitor.STATE_STOPPED) {
 				monitor.setState(state);
 				monitor.setLastUpdatedTime();
-				
+
 				for (int i = 0; i < monitor.getActions().size(); i++) {
 					Action action = monitor.getActions().get(i);
 					if (monitor.getState() == Monitor.STATE_INVALID) {
@@ -78,24 +77,27 @@ public class MonitorService extends IntentService {
 		}
 	}
 
-	private Response getResponse(Request request, int timeout) {
+	private Response getResponse(Request request) {
 		Response response = new Response();
 		BufferedReader reader = null;
+		
+		Prefs prefs = new Prefs(this);
+		int timeout = prefs.getTimeout();
+		String userAgent = prefs.getUserAgent();
 
 		try {
 			URL u = new URL(request.getUrl());
 			CodeTimer timer = new CodeTimer();
 			HttpURLConnection uc = (HttpURLConnection) u.openConnection();
+
+			if (userAgent != null && userAgent.length() != 0) {
+				uc.setRequestProperty("User-Agent", userAgent);
+			}
 			uc.setReadTimeout(timeout * 1000);
 
 			int responseCode = uc.getResponseCode();
 			response.setResponseCode(responseCode);
 			response.setAlive(true);
-
-			if (uc.getResponseCode() != 200) {
-				// TODO: android log
-				return null;
-			}
 
 			StringBuilder body = new StringBuilder();
 			reader = new BufferedReader(new InputStreamReader(uc
@@ -108,6 +110,8 @@ public class MonitorService extends IntentService {
 			}
 			response.setResponseTime(timer.getElapsed());
 			response.setContent(body.toString());
+
+			response.setHeaderFields(uc.getHeaderFields());
 		} catch (Throwable t) {
 			response.setThrowable(t);
 		} finally {

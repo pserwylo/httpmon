@@ -14,8 +14,8 @@ import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -32,12 +32,15 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 
 public class ManageMonitorsActivity extends Activity {
+	private static final int HELP_DIALOG = 0;
+	
 	private static final int NOTIFY_RUNNING = 100;
 
 	private static final int NEW_MONITOR_MENU = 0;
 	private static final int START_ALL_MENU = 1;
 	private static final int STOP_ALL_MENU = 2;
 	private static final int PREFS_MENU = 3;
+	private static final int HELP_MENU = 4;
 
 	static final int NEW_MONITOR_REQUEST = 0;
 	static final int EDIT_MONITOR_REQUEST = 1;
@@ -51,6 +54,8 @@ public class ManageMonitorsActivity extends Activity {
 	private Monitor mEditMonitor;
 	private Timer mUpdateTimer;
 
+	private AlertDialog mHelpDialog;
+	
 	public Monitor getEditMonitor() {
 		return mEditMonitor;
 	}
@@ -104,7 +109,9 @@ public class ManageMonitorsActivity extends Activity {
 		menu.add(0, STOP_ALL_MENU, 2, R.string.stop_all_menu).setIcon(
 				R.drawable.cancel);
 		menu.add(0, PREFS_MENU, 3, R.string.preferences_menu).setIcon(
-				R.drawable.preferences);
+				android.R.drawable.ic_menu_preferences);
+		menu.add(0, HELP_MENU, 3, R.string.help_menu).setIcon(
+				android.R.drawable.ic_menu_help);
 		return result;
 	}
 
@@ -125,6 +132,9 @@ public class ManageMonitorsActivity extends Activity {
 		case PREFS_MENU:
 			Intent i = new Intent(this, PrefsActivity.class);
 			startActivityForResult(i, PREFS_REQUEST);
+			return true;
+		case HELP_MENU:
+			showDialog(HELP_DIALOG);
 			return true;
 		}
 
@@ -305,6 +315,20 @@ public class ManageMonitorsActivity extends Activity {
 
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
+		case HELP_DIALOG:
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle("Manage Monitors Help");
+			builder
+					.setMessage(R.string.manage_monitors_help);
+			builder.setNeutralButton(R.string.ok,
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							dismissDialog(HELP_DIALOG);
+						}
+					});
+			mHelpDialog = builder.create();
+			return mHelpDialog;
+		
 		}
 		return null;
 	}

@@ -3,5 +3,9 @@
 	<EditTextPreference android:title="Request Timeout"
 		android:summary="Maximum time to wait for a response, in seconds."
 		android:key="timeout" android:defaultValue="30"/>
+	<ListPreference android:title="User Agent"
+		android:summary="Use this user agent for all requests."
+		android:key="userAgent" android:defaultValue=""
+		android:entries="@array/useragent_entries" android:entryValues="@array/useragent_values" />
 </PreferenceScreen>
 

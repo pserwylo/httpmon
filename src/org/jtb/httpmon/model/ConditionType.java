@@ -9,7 +9,9 @@ public abstract class ConditionType implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public static final ConditionType[] TYPES = new ConditionType[] {
 		new PingConditionType(),
+		new ResponseCodeConditionType(),
 		new ResponseTimeConditionType(),
+		new HeaderContainsConditionType(),
 		new ContentContainsConditionType()
 	};
 	

@@ -10,6 +10,12 @@
 <string name="start_all_menu">Start All</string>
 <string name="preferences_menu">Preferences</string>
 <string name="edit_response_time_condition_help">Response times can be affected by your wireless network quality.</string>
+<string name="edit_response_code_condition_help">See http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html for a list of HTTP response codes.</string>
 <string name="edit_sms_action_help">Sending text messages may cause additional monetary charges. Review your service plan before using this action.</string>
 <string name="edit_content_contains_condition_help">All matching is case-insensitive. Regular expressions must be specified per the Java Pattern specification (and must be duly escaped). See http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html for details. Dot consumes newlines (dotall mode).</string>
+<string name="edit_header_contains_condition_help">Header field and all matching is case-insensitive. Regular expressions must be specified per the Java Pattern specification (and must be duly escaped). See http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html for details. Dot consumes newlines (dotall mode).</string>
+<string name="help_menu">Help</string>
+<string name="ok">Okay</string>
+<string name="manage_monitors_help">Click a monitor to edit.\n\nLong press a monitor to start, stop or remove.</string>
+<string name="edit_monitor_help">Click a condition or action to edit.\n\nLong press a condition or action to remove.</string>
 </resources>

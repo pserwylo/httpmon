@@ -8,6 +8,7 @@ import org.jtb.httpmon.model.Request;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
@@ -52,20 +53,31 @@ public class EditRequestActivity extends Activity {
 		return result;
 	}
 
+	private boolean save() {
+		setRequest();
+		if (validateRequest()) {
+			Intent intent = new Intent();
+			intent.putExtra("org.jtb.httpmon.request", mRequest);
+			setResult(Activity.RESULT_OK, intent);
+			return true;
+		}
+		return false;
+	}
+
+	private void cancel() {
+		setResult(Activity.RESULT_CANCELED);
+	}
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case SAVE_MENU:
-			setRequest();
-			if (validateRequest()) {
-				Intent intent = new Intent();
-				intent.putExtra("org.jtb.httpmon.request", mRequest);
-				setResult(Activity.RESULT_OK, intent);
+			if (save()) {
 				finish();
 			}
 			return true;
 		case CANCEL_MENU:
-			setResult(Activity.RESULT_CANCELED);
+			cancel();
 			finish();
 			return true;
 		}
@@ -73,27 +85,42 @@ public class EditRequestActivity extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			if (save()) {
+				return super.onKeyDown(keyCode, event);
+			} else {
+				return false;
+			}
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+
 	private boolean validateRequest() {
-		try { 
+		try {
 			new URL(mRequest.getUrl());
 		} catch (MalformedURLException mue) {
 			Toast.makeText(this, "The URL you entered is not valid.",
 					Toast.LENGTH_LONG).show();
-			return false;			
+			return false;
 		}
 		if (mRequest.getUrl().equalsIgnoreCase("http://")) {
 			Toast.makeText(this, "The URL you entered is not valid.",
 					Toast.LENGTH_LONG).show();
-			return false;						
+			return false;
 		}
-		if (mRequest.getInterval() == 0) {
-			Toast.makeText(this, "Please give your your request a non-zero interval.",
-					Toast.LENGTH_LONG).show();
+		if (mRequest.getInterval() < 60) {
+			Toast
+					.makeText(
+							this,
+							"Please give your your request an interval of 60 seconds or greater.",
+							Toast.LENGTH_LONG).show();
 			return false;
 		}
 		return true;
 	}
-	
+
 	private void setRequest() {
 		mRequest.setUrl(mUrlEdit.getText().toString());
 		mRequest.setInterval(mIntervalEdit.getText().toString());

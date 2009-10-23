@@ -1,11 +1,16 @@
 package org.jtb.httpmon.model;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class Response {
 	private long responseTime = -1;
 	private String content = null;
 	private int responseCode = -1;
 	private Throwable throwable = null;
 	private boolean alive = false;
+	private Map<String,List<String>> headerFields;
 	
 	public void setResponseTime(long responseTime) {
 		this.responseTime = responseTime;
@@ -45,5 +50,13 @@ public class Response {
 
 	public String getContent() {
 		return content;
+	}
+
+	public void setHeaderFields(Map<String,List<String>> headerFields) {
+		this.headerFields = headerFields;
+	}
+
+	public Map<String,List<String>> getHeaderFields() {
+		return headerFields;
 	}
 }

@@ -9,8 +9,11 @@ import org.jtb.httpmon.model.Request;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,12 +26,16 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AbsListView.LayoutParams;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 
 public class EditMonitorActivity extends Activity {
+	private static final int HELP_DIALOG = 0;
+
 	private static final int SAVE_MENU = 0;
 	private static final int CANCEL_MENU = 1;
+	private static final int HELP_MENU = 2;
 
 	private static final int EDIT_REQUEST_REQUEST = 0;
 	private static final int NEW_CONDITION_REQUEST = 1;
@@ -50,10 +57,12 @@ public class EditMonitorActivity extends Activity {
 	private TextView mEmptyActionsText;
 	private Spinner mConditionsSpinner;
 	private Spinner mActionsSpinner;
-	private AlertDialog mConditionClickDialog;
-	private AlertDialog mActionClickDialog;
 	private Condition mEditCondition;
 	private Action mEditAction;
+
+	private AlertDialog mConditionClickDialog;
+	private AlertDialog mActionClickDialog;
+	private AlertDialog mHelpDialog;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -205,17 +214,37 @@ public class EditMonitorActivity extends Activity {
 		menu.add(0, SAVE_MENU, 0, R.string.save_menu).setIcon(R.drawable.save);
 		menu.add(0, CANCEL_MENU, 1, R.string.cancel_menu).setIcon(
 				R.drawable.cancel);
+		menu.add(0, HELP_MENU, 3, R.string.help_menu).setIcon(
+				android.R.drawable.ic_menu_help);
 		return result;
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			if (save()) {
+				return super.onKeyDown(keyCode, event);
+			} else {
+				return false;
+			}
+		}
+		return super.onKeyDown(keyCode, event);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case SAVE_MENU:
-			save();
+			if (save()) {
+				finish();
+			}
 			return true;
 		case CANCEL_MENU:
 			cancel();
+			finish();
+			return true;
+		case HELP_MENU:
+			showDialog(HELP_DIALOG);
 			return true;
 		}
 
@@ -229,17 +258,17 @@ public class EditMonitorActivity extends Activity {
 
 	private void cancel() {
 		setResult(Activity.RESULT_CANCELED);
-		finish();
 	}
 
-	private void save() {
+	private boolean save() {
 		setMonitor();
 		if (validateMonitor()) {
 			Intent intent = new Intent();
 			intent.putExtra("org.jtb.httpmon.monitor", mMonitor);
 			setResult(Activity.RESULT_OK, intent);
-			finish();
+			return true;
 		}
+		return false;
 	}
 
 	private boolean validateMonitor() {
@@ -289,6 +318,7 @@ public class EditMonitorActivity extends Activity {
 			ConditionAdapter ca = new ConditionAdapter(this, mMonitor
 					.getConditions());
 			mConditionList.setAdapter(ca);
+			mConditionList.getParent().requestLayout();
 		}
 	}
 
@@ -299,8 +329,7 @@ public class EditMonitorActivity extends Activity {
 		} else {
 			mActionList.setVisibility(View.VISIBLE);
 			mEmptyActionsText.setVisibility(View.GONE);
-			ActionAdapter aa = new ActionAdapter(this, mMonitor
-					.getActions());
+			ActionAdapter aa = new ActionAdapter(this, mMonitor.getActions());
 			mActionList.setAdapter(aa);
 		}
 	}
@@ -362,4 +391,24 @@ public class EditMonitorActivity extends Activity {
 			break;
 		}
 	}
+
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case HELP_DIALOG:
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle("Edit Monitor Help");
+			builder.setMessage(R.string.edit_monitor_help);
+			builder.setNeutralButton(R.string.ok,
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							dismissDialog(HELP_DIALOG);
+						}
+					});
+			mHelpDialog = builder.create();
+			return mHelpDialog;
+
+		}
+		return null;
+	}
+
 }

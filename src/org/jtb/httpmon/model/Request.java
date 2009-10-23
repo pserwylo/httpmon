@@ -60,6 +60,6 @@ public class Request implements Serializable {
 
 	@Override
 	public String toString() {
-		return url;
+		return url + " (" + interval + "s)";
 	}
 }

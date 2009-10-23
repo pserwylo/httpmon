@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="org.jtb.httpmon" android:versionCode="1" android:versionName="1.0">
+	package="org.jtb.httpmon" android:versionCode="2" android:versionName="0.1.1">
 	<application android:icon="@drawable/icon" android:label="@string/app_name">
 		<activity android:name=".ManageMonitorsActivity"
 			android:launchMode="singleTask" android:label="httpmon - Manage Monitors">
@@ -14,8 +14,12 @@
 		<activity android:name=".EditRequestActivity" android:label="httpmon - Edit Request" />
 		<activity android:name=".EditResponseTimeConditionActivity"
 			android:label="httpmon - Edit Response Time Condition" />
+		<activity android:name=".EditResponseCodeConditionActivity"
+			android:label="httpmon - Edit Response Code Condition" />
 		<activity android:name=".EditContentContainsConditionActivity"
 			android:label="httpmon - Edit Content Contains Condition" />
+		<activity android:name=".EditHeaderContainsConditionActivity"
+			android:label="httpmon - Edit Header Contains Condition" />
 		<activity android:name=".EditNotificationActionActivity"
 			android:label="httpmon - Edit Notification Action" />
 		<activity android:name=".EditSmsActionActivity"

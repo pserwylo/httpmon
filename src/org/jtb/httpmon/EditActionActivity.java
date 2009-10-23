@@ -10,6 +10,7 @@ import org.jtb.httpmon.model.Request;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
@@ -69,29 +70,44 @@ public abstract class EditActionActivity extends Activity {
 		super.onPause();
 	}
 
-	private void save() {
+	private boolean save() {
 		setAction();
 		if (validateAction()) {
 			Intent intent = new Intent();
 			intent.putExtra("org.jtb.httpmon.action", mAction);
 			setResult(Activity.RESULT_OK, intent);
-			finish();
+			return true;
 		}
+		return false;
 	}
 
 	private void cancel() {
 		setResult(Activity.RESULT_CANCELED);
-		finish();
 	}
 
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			if (save()) {
+				return super.onKeyDown(keyCode, event);
+			} else {
+				return false;
+			}
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case SAVE_MENU:
-			save();
+			if (save()) {
+				finish();
+			}
 			return true;
 		case CANCEL_MENU:
 			cancel();
+			finish();
 			return true;
 		}
 

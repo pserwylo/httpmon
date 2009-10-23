@@ -5,7 +5,7 @@
 		android:layout_width="fill_parent" android:layout_height="wrap_content">
 		<LinearLayout android:orientation="vertical"
 			android:layout_margin="5px" android:padding="5px" android:background="#aaaaaa"
-			android:layout_width="fill_parent" android:layout_height="wrap_content">
+			android:layout_width="fill_parent" android:layout_height="fill_parent">
 			<TextView android:layout_width="fill_parent"
 				android:textStyle="bold" android:textColor="#ffffff"
 				android:layout_height="wrap_content" android:text="Name" />
@@ -41,9 +41,8 @@
 				android:text="[none]" android:textColor="#ffffff"
 				android:layout_width="fill_parent" android:layout_height="wrap_content"
 				android:layout_marginBottom="10px" />
-			<ListView android:id="@+id/condition_list"
-				android:layout_width="fill_parent" android:layout_height="wrap_content"
-				android:visibility="gone" />
+			<ListView android:id="@+id/condition_list" android:entries="@array/test_conditions"
+				android:layout_width="fill_parent" android:layout_height="wrap_content" />
 			<LinearLayout android:orientation="horizontal"
 				android:layout_width="fill_parent" android:layout_height="wrap_content">
 				<Spinner android:id="@+id/conditions_spinner"
