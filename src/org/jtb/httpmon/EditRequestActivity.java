@@ -47,9 +47,9 @@ public class EditRequestActivity extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean result = super.onCreateOptionsMenu(menu);
-		menu.add(0, SAVE_MENU, 0, R.string.save_menu).setIcon(R.drawable.save);
+		menu.add(0, SAVE_MENU, 0, R.string.save_menu).setIcon(android.R.drawable.ic_menu_save);
 		menu.add(0, CANCEL_MENU, 1, R.string.cancel_menu).setIcon(
-				R.drawable.cancel);
+				android.R.drawable.ic_menu_close_clear_cancel);
 		return result;
 	}
 

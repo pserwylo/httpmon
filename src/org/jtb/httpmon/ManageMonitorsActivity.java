@@ -103,11 +103,11 @@ public class ManageMonitorsActivity extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean result = super.onCreateOptionsMenu(menu);
 		menu.add(0, NEW_MONITOR_MENU, 0, R.string.new_monitor_menu).setIcon(
-				R.drawable.add);
+				android.R.drawable.ic_menu_add);
 		menu.add(0, START_ALL_MENU, 1, R.string.start_all_menu).setIcon(
-				R.drawable.upload);
+				android.R.drawable.ic_menu_upload);
 		menu.add(0, STOP_ALL_MENU, 2, R.string.stop_all_menu).setIcon(
-				R.drawable.cancel);
+				android.R.drawable.ic_menu_close_clear_cancel);
 		menu.add(0, PREFS_MENU, 3, R.string.preferences_menu).setIcon(
 				android.R.drawable.ic_menu_preferences);
 		menu.add(0, HELP_MENU, 3, R.string.help_menu).setIcon(
