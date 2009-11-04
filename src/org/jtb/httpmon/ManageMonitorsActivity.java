@@ -262,7 +262,7 @@ public class ManageMonitorsActivity extends Activity {
 		if (runCount > 0) {
 			NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-			int icon = android.R.drawable.stat_notify_sync;
+			int icon = R.drawable.sync;
 			CharSequence tickerText = runCount + " monitor(s) running";
 
 			Notification notification = new Notification(icon, tickerText,

@@ -5,6 +5,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.X509TrustManager;
 
 import org.jtb.httpmon.model.Action;
 import org.jtb.httpmon.model.Monitor;
@@ -18,6 +27,38 @@ import android.util.Log;
 public class MonitorService extends IntentService {
 	public MonitorService() {
 		super("monitorService");
+		trustEveryone();
+	}
+
+	private void trustEveryone() {
+		try {
+			HttpsURLConnection
+					.setDefaultHostnameVerifier(new HostnameVerifier() {
+
+						public boolean verify(String hostname,
+								SSLSession session) {
+							return true;
+						}
+					});
+			SSLContext context = SSLContext.getInstance("TLS");
+			context.init(null, new X509TrustManager[] { new X509TrustManager() {
+				public void checkClientTrusted(X509Certificate[] chain,
+						String authType) throws CertificateException {
+				}
+
+				public void checkServerTrusted(X509Certificate[] chain,
+						String authType) throws CertificateException {
+				}
+
+				public X509Certificate[] getAcceptedIssuers() {
+					return new X509Certificate[0];
+				}
+			} }, new SecureRandom());
+			HttpsURLConnection.setDefaultSSLSocketFactory(context
+					.getSocketFactory());
+		} catch (Exception e) { // should never happen
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -43,6 +84,9 @@ public class MonitorService extends IntentService {
 			sendBroadcast(new Intent("ManageMonitors.update"));
 
 			Response response = getResponse(monitor.getRequest());
+			if (response.getThrowable() != null) {
+				Log.w(getClass().getSimpleName(), response.getThrowable());
+			}
 			int state = Monitor.STATE_VALID;
 			for (int i = 0; i < monitor.getConditions().size(); i++) {
 				if (!monitor.getConditions().get(i).isValid(response)) {
@@ -80,7 +124,7 @@ public class MonitorService extends IntentService {
 	private Response getResponse(Request request) {
 		Response response = new Response();
 		BufferedReader reader = null;
-		
+
 		Prefs prefs = new Prefs(this);
 		int timeout = prefs.getTimeout();
 		String userAgent = prefs.getUserAgent();
@@ -94,6 +138,7 @@ public class MonitorService extends IntentService {
 				uc.setRequestProperty("User-Agent", userAgent);
 			}
 			uc.setReadTimeout(timeout * 1000);
+			uc.setUseCaches(false);
 
 			int responseCode = uc.getResponseCode();
 			response.setResponseCode(responseCode);
