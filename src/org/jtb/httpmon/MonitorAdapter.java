@@ -63,6 +63,10 @@ public class MonitorAdapter extends ArrayAdapter {
 		long now = System.currentTimeMillis();
 		long diff = now - updated;
 
+		long diffDays = diff / (24 * 60 * 60 * 1000);
+		if (diffDays > 0) {
+			return "Updated ~" + diffDays + " days ago";
+		}
 		long diffHours = diff / (60 * 60 * 1000);
 		if (diffHours > 0) {
 			return "Updated ~" + diffHours + " hours ago";

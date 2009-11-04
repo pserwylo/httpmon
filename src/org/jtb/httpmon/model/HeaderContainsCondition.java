@@ -67,7 +67,10 @@ public class HeaderContainsCondition extends ContainsCondition {
 
 	@Override
 	public String getTargetString(Response r) {
-		List<String> fields = r.getHeaderFields().get(header);
+		List<String> fields = r.getHeaderFields().get(header.toLowerCase());
+		if (fields == null) {
+			return "";
+		}
 		return fields.toString();
 	}
 

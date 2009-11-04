@@ -1,7 +1,9 @@
 package org.jtb.httpmon;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -15,6 +17,24 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.http.HttpMessage;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.params.ConnManagerPNames;
+import org.apache.http.conn.params.ConnPerRouteBean;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.params.HttpProtocolParams;
 import org.jtb.httpmon.model.Action;
 import org.jtb.httpmon.model.Monitor;
 import org.jtb.httpmon.model.Request;
@@ -25,12 +45,69 @@ import android.content.Intent;
 import android.util.Log;
 
 public class MonitorService extends IntentService {
-	public MonitorService() {
-		super("monitorService");
-		trustEveryone();
+	//private static ClientConnectionManager CONNECTION_MGR;
+	//private static HttpParams CONNECTION_PARAMS;
+
+	static {
+		// setURLConnectionTrust();
+		//setHttpClientTrust();
 	}
 
-	private void trustEveryone() {
+	public MonitorService() {
+		super("monitorService");
+	}
+
+	private static ClientConnectionManager getClientConnectionManager(HttpParams params) {
+		SchemeRegistry schemeRegistry = new SchemeRegistry();
+		// http scheme
+		schemeRegistry.register(new Scheme("http", PlainSocketFactory
+				.getSocketFactory(), 80));
+		// https scheme
+		schemeRegistry.register(new Scheme("https", new EasySSLSocketFactory(),
+				443));
+		ClientConnectionManager ccm = new ThreadSafeClientConnManager(params,
+				schemeRegistry);
+		return ccm;
+	}
+	
+	private static HttpParams getHttpParams() {
+		HttpParams params = new BasicHttpParams();
+		params.setParameter(ConnManagerPNames.MAX_TOTAL_CONNECTIONS, 30);
+		params.setParameter(
+				ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE,
+				new ConnPerRouteBean(30));
+		params.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE,
+				false);
+		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);		
+		return params;
+	}
+	
+	/*
+	private static void setHttpClientTrust() {
+		SchemeRegistry schemeRegistry = new SchemeRegistry();
+		// http scheme
+		schemeRegistry.register(new Scheme("http", PlainSocketFactory
+				.getSocketFactory(), 80));
+		// https scheme
+		schemeRegistry.register(new Scheme("https", new EasySSLSocketFactory(),
+				443));
+
+		CONNECTION_PARAMS = new BasicHttpParams();
+		CONNECTION_PARAMS.setParameter(ConnManagerPNames.MAX_TOTAL_CONNECTIONS,
+				30);
+		CONNECTION_PARAMS.setParameter(
+				ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE,
+				new ConnPerRouteBean(30));
+		CONNECTION_PARAMS.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE,
+				false);
+		HttpProtocolParams.setVersion(CONNECTION_PARAMS, HttpVersion.HTTP_1_1);
+
+		CONNECTION_MGR = new ThreadSafeClientConnManager(CONNECTION_PARAMS,
+				schemeRegistry);
+	}
+	*/
+	
+	private static void setURLConnectionTrust() {
 		try {
 			HttpsURLConnection
 					.setDefaultHostnameVerifier(new HostnameVerifier() {
@@ -40,6 +117,7 @@ public class MonitorService extends IntentService {
 							return true;
 						}
 					});
+
 			SSLContext context = SSLContext.getInstance("TLS");
 			context.init(null, new X509TrustManager[] { new X509TrustManager() {
 				public void checkClientTrusted(X509Certificate[] chain,
@@ -52,12 +130,15 @@ public class MonitorService extends IntentService {
 
 				public X509Certificate[] getAcceptedIssuers() {
 					return new X509Certificate[0];
+					// return null;
 				}
 			} }, new SecureRandom());
+
 			HttpsURLConnection.setDefaultSSLSocketFactory(context
 					.getSocketFactory());
 		} catch (Exception e) { // should never happen
-			e.printStackTrace();
+			Log.e(MonitorService.class.getSimpleName(),
+					"error setting up SSL trust", e);
 		}
 	}
 
@@ -83,7 +164,8 @@ public class MonitorService extends IntentService {
 			prefs.setMonitor(monitor);
 			sendBroadcast(new Intent("ManageMonitors.update"));
 
-			Response response = getResponse(monitor.getRequest());
+			Response response = getResponseFromHttpClient(monitor.getRequest());
+
 			if (response.getThrowable() != null) {
 				Log.w(getClass().getSimpleName(), response.getThrowable());
 			}
@@ -121,7 +203,66 @@ public class MonitorService extends IntentService {
 		}
 	}
 
-	private Response getResponse(Request request) {
+	private Response getResponseFromURLConnection(Request request) {
+		Response response = new Response();
+		InputStream is = null;
+
+		Prefs prefs = new Prefs(this);
+		int timeout = prefs.getTimeout();
+		String userAgent = prefs.getUserAgent();
+		HttpURLConnection uc = null;
+
+		try {
+			URL u = new URL(request.getUrl());
+			uc = (HttpURLConnection) u.openConnection();
+
+			if (userAgent != null && userAgent.length() != 0) {
+				uc.setRequestProperty("User-Agent", userAgent);
+			}
+			uc.setConnectTimeout(timeout * 1000);
+			uc.setReadTimeout(timeout * 1000);
+			uc.setUseCaches(false);
+			uc.connect();
+
+			int responseCode = uc.getResponseCode();
+			response.setResponseCode(responseCode);
+			response.setAlive(true);
+			CodeTimer timer = new CodeTimer();
+			is = uc.getInputStream();
+			response.setContent(readResponseBody(is));
+			response.setResponseTime(timer.getElapsed());
+			response.setHeaderFields(uc.getHeaderFields());
+		} catch (Throwable t) {
+			response.setThrowable(t);
+		} finally {
+			try {
+				if (is != null) {
+					is.close();
+				}
+			} catch (IOException ioe) {
+			}
+			if (uc != null) {
+				uc.disconnect();
+			}
+		}
+		return response;
+	}
+
+	private String readResponseBody(InputStream is) throws IOException {
+		BufferedInputStream bis = new BufferedInputStream(is);
+		final byte[] buffer = new byte[1024];
+		int count;
+
+		StringBuilder sb = new StringBuilder();
+		while ((count = bis.read(buffer)) != -1) {
+			String s = new String(buffer, 0, count, "UTF-8");
+			sb.append(s);
+		}
+
+		return sb.toString();
+	}
+
+	private Response getResponseFromHttpClient(Request request) {
 		Response response = new Response();
 		BufferedReader reader = null;
 
@@ -130,33 +271,32 @@ public class MonitorService extends IntentService {
 		String userAgent = prefs.getUserAgent();
 
 		try {
-			URL u = new URL(request.getUrl());
-			CodeTimer timer = new CodeTimer();
-			HttpURLConnection uc = (HttpURLConnection) u.openConnection();
+			HttpParams params = getHttpParams();
+			ClientConnectionManager ccm = getClientConnectionManager(params);
+			HttpClient client = new DefaultHttpClient(ccm, params);
 
+			HttpGet get = new HttpGet(request.getUrl());
+			HttpConnectionParams.setConnectionTimeout(client.getParams(), timeout * 1000);
+			HttpConnectionParams.setSoTimeout(client.getParams(), timeout * 1000);
 			if (userAgent != null && userAgent.length() != 0) {
-				uc.setRequestProperty("User-Agent", userAgent);
+				get.setHeader("User-Agent", userAgent);
 			}
-			uc.setReadTimeout(timeout * 1000);
-			uc.setUseCaches(false);
 
-			int responseCode = uc.getResponseCode();
+			CodeTimer timer = new CodeTimer();
+			HttpResponse res = client.execute(get);
+
+			StatusLine sl = res.getStatusLine();
+			int responseCode = sl.getStatusCode();
 			response.setResponseCode(responseCode);
+
 			response.setAlive(true);
 
-			StringBuilder body = new StringBuilder();
-			reader = new BufferedReader(new InputStreamReader(uc
-					.getInputStream(), "ISO-8859-1"), 8192);
-			String line = null;
-
-			while ((line = reader.readLine()) != null) {
-				body.append(line);
-				body.append('\n');
-			}
+			InputStream is = res.getEntity().getContent();
+			String body = readResponseBody(is);
 			response.setResponseTime(timer.getElapsed());
 			response.setContent(body.toString());
 
-			response.setHeaderFields(uc.getHeaderFields());
+			response.setHeaderFields(res.getAllHeaders());
 		} catch (Throwable t) {
 			response.setThrowable(t);
 		} finally {
@@ -165,10 +305,10 @@ public class MonitorService extends IntentService {
 					reader.close();
 				}
 			} catch (IOException ioe) {
-				// TODO: android log
 			}
 		}
 
 		return response;
 	}
+
 }

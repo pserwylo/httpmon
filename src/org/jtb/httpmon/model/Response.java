@@ -1,8 +1,13 @@
 package org.jtb.httpmon.model;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
 
 public class Response {
 	private long responseTime = -1;
@@ -10,8 +15,8 @@ public class Response {
 	private int responseCode = -1;
 	private Throwable throwable = null;
 	private boolean alive = false;
-	private Map<String,List<String>> headerFields;
-	
+	private Map<String, List<String>> headerFields;
+
 	public void setResponseTime(long responseTime) {
 		this.responseTime = responseTime;
 	}
@@ -52,11 +57,25 @@ public class Response {
 		return content;
 	}
 
-	public void setHeaderFields(Map<String,List<String>> headerFields) {
+	public void setHeaderFields(Map<String, List<String>> headerFields) {
 		this.headerFields = headerFields;
 	}
 
-	public Map<String,List<String>> getHeaderFields() {
+	public void setHeaderFields(Header[] headers) {
+		this.headerFields = new HashMap<String, List<String>>();
+		for (int i = 0; i < headers.length; i++) {
+			String name = headers[i].getName().toLowerCase();
+			String val = headers[i].getValue();
+			List<String> vals = headerFields.get(name);
+			if (vals == null) {
+				vals = new ArrayList<String>();
+				headerFields.put(name, vals);
+			}
+			vals.add(val);
+		}
+	}
+
+	public Map<String, List<String>> getHeaderFields() {
 		return headerFields;
 	}
 }
