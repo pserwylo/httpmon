@@ -89,8 +89,12 @@ public class Prefs {
 		return b;
 	}
 
-	public int getTimeout() {
-		return getInt("timeout", 30);
+	public int getConnectionTimeout() {
+		return getInt("connectionTimeout", 30);
+	}
+
+	public int getReadTimeout() {
+		return getInt("readTimeout", 30);
 	}
 	
 	public String getUserAgent() {
@@ -142,5 +146,9 @@ public class Prefs {
 			}
 		}
 		return null;
+	}
+	
+	public boolean isBootStart() {
+		return getBoolean("bootStart", false);
 	}
 }

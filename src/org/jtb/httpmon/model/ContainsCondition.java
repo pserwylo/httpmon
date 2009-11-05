@@ -102,6 +102,9 @@ public abstract class ContainsCondition extends Condition {
 	}
 
 	private boolean isMatchesSubstring(String s) {
+		if (s == null) {
+			return false;
+		}
 		String c = s.toLowerCase();
 		String p = pattern.toLowerCase();
 		return c.contains(p);

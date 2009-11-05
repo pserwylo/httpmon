@@ -60,6 +60,7 @@ public class Request implements Serializable {
 
 	@Override
 	public String toString() {
-		return url + " (" + interval + "s)";
+		TruncatedString ts = new TruncatedString(url, 24);
+		return ts + " (" + interval + "s)";
 	}
 }

@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-	<EditTextPreference android:title="Request Timeout"
-		android:summary="Maximum time to wait for a response, in seconds."
-		android:key="timeout" android:defaultValue="30"/>
+	<CheckBoxPreference android:title="Start at boot?"
+		android:summary="Restart previously running monitors when phone is restarted?"
+		android:key="bootStart" android:defaultValue="false"/>
+	<EditTextPreference android:title="Connection Timeout"
+		android:summary="Maximum time to wait for a connection, in seconds."
+		android:key="connectionTimeout" android:defaultValue="30"/>
+	<EditTextPreference android:title="Read Timeout"
+		android:summary="Maximum time to wait for content to be returned, in seconds."
+		android:key="readTimeout" android:defaultValue="30"/>
 	<ListPreference android:title="User Agent"
 		android:summary="Use this user agent for all requests."
 		android:key="userAgent" android:defaultValue=""

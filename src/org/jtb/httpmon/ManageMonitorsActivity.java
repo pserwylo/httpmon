@@ -34,8 +34,6 @@ import android.widget.AdapterView.OnItemLongClickListener;
 public class ManageMonitorsActivity extends Activity {
 	private static final int HELP_DIALOG = 0;
 	
-	private static final int NOTIFY_RUNNING = 100;
-
 	private static final int NEW_MONITOR_MENU = 0;
 	private static final int START_ALL_MENU = 1;
 	private static final int STOP_ALL_MENU = 2;
@@ -53,7 +51,8 @@ public class ManageMonitorsActivity extends Activity {
 	private ManageMonitorsReceiver mReceiver;
 	private Monitor mEditMonitor;
 	private Timer mUpdateTimer;
-
+	private MonitorScheduler mScheduler;
+	
 	private AlertDialog mHelpDialog;
 	
 	public Monitor getEditMonitor() {
@@ -73,13 +72,14 @@ public class ManageMonitorsActivity extends Activity {
 
 		mThis = this;
 		mReceiver = new ManageMonitorsReceiver(this);
-
+		mScheduler = new MonitorScheduler(this);
+		
 		mMonitorList = (ListView) findViewById(R.id.monitor_list);
 		mMonitorList.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View v,
 					int position, long id) {
 				mEditMonitor = mMonitors.get(position);
-				stopMonitor(mEditMonitor);
+				mScheduler.stop(mEditMonitor);
 				Intent intent = new Intent(mThis, EditMonitorActivity.class);
 				intent.putExtra("org.jtb.httpmon.monitor", mEditMonitor);
 				startActivityForResult(intent, EDIT_MONITOR_REQUEST);
@@ -124,10 +124,10 @@ public class ManageMonitorsActivity extends Activity {
 			startActivityForResult(intent, NEW_MONITOR_REQUEST);
 			return true;
 		case STOP_ALL_MENU:
-			stopAll();
+			mScheduler.stopAll(mMonitors);
 			return true;
 		case START_ALL_MENU:
-			startAll();
+			mScheduler.startAll(mMonitors);
 			return true;
 		case PREFS_MENU:
 			Intent i = new Intent(this, PrefsActivity.class);
@@ -139,26 +139,6 @@ public class ManageMonitorsActivity extends Activity {
 		}
 
 		return super.onOptionsItemSelected(item);
-	}
-
-	private void stopAll() {
-		for (int i = 0; i < mMonitors.size(); i++) {
-			stopMonitor(mMonitors.get(i));
-		}
-	}
-
-	private void startAll() {
-		for (int i = 0; i < mMonitors.size(); i++) {
-			startMonitor(mMonitors.get(i));
-		}
-	}
-
-	private void restartAll() {
-		for (int i = 0; i < mMonitors.size(); i++) {
-			if (mMonitors.get(i).getState() != Monitor.STATE_STOPPED) {
-				startMonitor(mMonitors.get(i));
-			}
-		}
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -185,8 +165,8 @@ public class ManageMonitorsActivity extends Activity {
 				Monitor monitor = (Monitor) data
 						.getSerializableExtra("org.jtb.httpmon.monitor");
 				if (monitor.getState() != Monitor.STATE_STOPPED) {
-					stopMonitor(monitor);
-					startMonitor(monitor);
+					mScheduler.stop(monitor);
+					mScheduler.start(monitor);
 				}
 				Prefs prefs = new Prefs(this);
 				prefs.removeMonitor(mEditMonitor);
@@ -223,7 +203,7 @@ public class ManageMonitorsActivity extends Activity {
 		super.onPause();
 		unregisterReceiver(mReceiver);
 		mUpdateTimer.cancel();
-		addRunningNotification();
+		mScheduler.addRunningNotification(mMonitors);
 		
 		Log.d(getClass().getSimpleName(), "paused");
 	}
@@ -233,9 +213,9 @@ public class ManageMonitorsActivity extends Activity {
 		super.onResume();
 
 		registerReceiver(mReceiver, new IntentFilter("ManageMonitors.update"));
-		removeRunningNotification();
+		mScheduler.removeRunningNotification();
 		update();
-		restartAll();
+		mScheduler.restartAll(mMonitors);
 		mUpdateTimer = new Timer();
 		mUpdateTimer.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
@@ -246,73 +226,6 @@ public class ManageMonitorsActivity extends Activity {
 		Log.d(getClass().getSimpleName(), "resumed");
 	}
 	
-	private void removeRunningNotification() {
-		NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		nm.cancel(NOTIFY_RUNNING);
-	}
-
-	private void addRunningNotification() {
-		int runCount = 0;
-		for (int i = 0; mMonitors != null && i < mMonitors.size(); i++) {
-			if (mMonitors.get(i).getState() != Monitor.STATE_STOPPED) {
-				runCount++;
-			}
-		}
-
-		if (runCount > 0) {
-			NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-			int icon = R.drawable.sync;
-			CharSequence tickerText = runCount + " monitor(s) running";
-
-			Notification notification = new Notification(icon, tickerText,
-					System.currentTimeMillis());
-			notification.flags |= Notification.FLAG_ONGOING_EVENT
-					| Notification.FLAG_NO_CLEAR;
-
-			CharSequence contentTitle = tickerText;
-			CharSequence contentText = "Click to manage";
-
-			Intent notificationIntent = new Intent(this,
-					ManageMonitorsActivity.class);
-			PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-					notificationIntent, 0);
-
-			notification.setLatestEventInfo(this, contentTitle, contentText,
-					contentIntent);
-			nm.notify(NOTIFY_RUNNING, notification);
-		}
-	}
-
-	void stopMonitor(Monitor monitor) {
-		AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-		Intent i = new Intent(monitor.getName(), null, this,
-				MonitorReceiver.class);
-		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i,
-				PendingIntent.FLAG_CANCEL_CURRENT);
-		mgr.cancel(pi);
-		monitor.setState(Monitor.STATE_STOPPED);
-		Prefs prefs = new Prefs(this);
-		prefs.setMonitor(monitor);
-		update();
-	}
-
-	void startMonitor(Monitor monitor) {
-		AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-		Intent i = new Intent(monitor.getName(), null, this,
-				MonitorReceiver.class);
-		PendingIntent pi = PendingIntent.getBroadcast(this, 0, i,
-				PendingIntent.FLAG_CANCEL_CURRENT);
-		mgr.cancel(pi);
-		mgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock
-				.elapsedRealtime(), monitor.getRequest().getInterval() * 1000,
-				pi);
-		monitor.setState(Monitor.STATE_STARTED);
-		Prefs prefs = new Prefs(this);
-		prefs.setMonitor(monitor);
-		update();
-	}
-
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
 		case HELP_DIALOG:

@@ -53,8 +53,11 @@ public class MonitorService extends IntentService {
 		//setHttpClientTrust();
 	}
 
+	private Prefs mPrefs;
+	
 	public MonitorService() {
 		super("monitorService");
+		mPrefs = new Prefs(this);
 	}
 
 	private static ClientConnectionManager getClientConnectionManager(HttpParams params) {
@@ -153,15 +156,14 @@ public class MonitorService extends IntentService {
 				return;
 			}
 
-			Prefs prefs = new Prefs(this);
-			Monitor monitor = prefs.getMonitor(name);
+			Monitor monitor = mPrefs.getMonitor(name);
 			if (monitor == null) {
 				Log.w(getClass().getSimpleName(), "monitor was null for name: "
 						+ name + ", returning");
 				return;
 			}
 			monitor.setState(Monitor.STATE_RUNNING);
-			prefs.setMonitor(monitor);
+			mPrefs.setMonitor(monitor);
 			sendBroadcast(new Intent("ManageMonitors.update"));
 
 			Response response = getResponseFromHttpClient(monitor.getRequest());
@@ -177,7 +179,7 @@ public class MonitorService extends IntentService {
 				}
 			}
 
-			monitor = prefs.getMonitor(monitor.getName());
+			monitor = mPrefs.getMonitor(monitor.getName());
 			if (monitor != null && monitor.getState() != Monitor.STATE_STOPPED) {
 				monitor.setState(state);
 				monitor.setLastUpdatedTime();
@@ -190,7 +192,7 @@ public class MonitorService extends IntentService {
 						action.success(this, monitor);
 					}
 				}
-				prefs.setMonitor(monitor);
+				mPrefs.setMonitor(monitor);
 				sendBroadcast(new Intent("ManageMonitors.update"));
 			}
 		} finally {
@@ -207,9 +209,9 @@ public class MonitorService extends IntentService {
 		Response response = new Response();
 		InputStream is = null;
 
-		Prefs prefs = new Prefs(this);
-		int timeout = prefs.getTimeout();
-		String userAgent = prefs.getUserAgent();
+		int cTimeout = mPrefs.getConnectionTimeout();
+		int rTimeout = mPrefs.getReadTimeout();
+		String userAgent = mPrefs.getUserAgent();
 		HttpURLConnection uc = null;
 
 		try {
@@ -219,8 +221,8 @@ public class MonitorService extends IntentService {
 			if (userAgent != null && userAgent.length() != 0) {
 				uc.setRequestProperty("User-Agent", userAgent);
 			}
-			uc.setConnectTimeout(timeout * 1000);
-			uc.setReadTimeout(timeout * 1000);
+			uc.setConnectTimeout(cTimeout * 1000);
+			uc.setReadTimeout(rTimeout * 1000);
 			uc.setUseCaches(false);
 			uc.connect();
 
@@ -266,9 +268,9 @@ public class MonitorService extends IntentService {
 		Response response = new Response();
 		BufferedReader reader = null;
 
-		Prefs prefs = new Prefs(this);
-		int timeout = prefs.getTimeout();
-		String userAgent = prefs.getUserAgent();
+		int cTimeout = mPrefs.getConnectionTimeout();
+		int rTimeout = mPrefs.getReadTimeout();
+		String userAgent = mPrefs.getUserAgent();
 
 		try {
 			HttpParams params = getHttpParams();
@@ -276,8 +278,8 @@ public class MonitorService extends IntentService {
 			HttpClient client = new DefaultHttpClient(ccm, params);
 
 			HttpGet get = new HttpGet(request.getUrl());
-			HttpConnectionParams.setConnectionTimeout(client.getParams(), timeout * 1000);
-			HttpConnectionParams.setSoTimeout(client.getParams(), timeout * 1000);
+			HttpConnectionParams.setConnectionTimeout(client.getParams(), cTimeout * 1000);
+			HttpConnectionParams.setSoTimeout(client.getParams(), rTimeout * 1000);
 			if (userAgent != null && userAgent.length() != 0) {
 				get.setHeader("User-Agent", userAgent);
 			}
