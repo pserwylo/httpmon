@@ -272,14 +272,6 @@ public class EditMonitorActivity extends Activity {
 	}
 
 	private boolean validateMonitor() {
-		if (mMonitor.getActions().size() == 0) {
-			Toast
-					.makeText(
-							this,
-							"You did not add any actions. No action will be taken when this monitor is invalid.",
-							Toast.LENGTH_LONG).show();
-		}
-
 		if (mMonitor.getName() == null || mMonitor.getName().length() == 0) {
 			Toast.makeText(this, "Please give your monitor a name first.",
 					Toast.LENGTH_LONG).show();
@@ -297,6 +289,15 @@ public class EditMonitorActivity extends Activity {
 			return false;
 		}
 
+		if (mMonitor.getActions().size() == 0) {
+			Toast
+					.makeText(
+							this,
+							"You did not add any actions. No action will be taken when this monitor is invalid.",
+							Toast.LENGTH_LONG).show();
+		}
+
+		
 		return true;
 	}
 
