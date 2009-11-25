@@ -7,8 +7,8 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
+import android.telephony.gsm.SmsManager;
 
 public class SmsAction extends Action {
 	private int intervalMinutes = 15;

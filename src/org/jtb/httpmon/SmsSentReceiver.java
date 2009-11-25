@@ -2,15 +2,13 @@ package org.jtb.httpmon;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
-
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.telephony.SmsManager;
+import android.telephony.gsm.SmsManager;
 import android.util.Log;
 
 public class SmsSentReceiver extends BroadcastReceiver {
