@@ -44,6 +44,7 @@ public class MonitorClickDialog extends AlertDialog {
 							mScheduler.start(monitor);
 						} else {
 							mScheduler.stop(monitor);
+							mActivity.update();
 						}
 						break;
 					case 1:

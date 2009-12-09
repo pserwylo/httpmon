@@ -125,6 +125,7 @@ public class ManageMonitorsActivity extends Activity {
 			return true;
 		case STOP_ALL_MENU:
 			mScheduler.stopAll(mMonitors);
+			update();
 			return true;
 		case START_ALL_MENU:
 			mScheduler.startAll(mMonitors);
