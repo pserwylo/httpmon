@@ -82,7 +82,7 @@ public class MonitorScheduler {
 			NotificationManager nm = (NotificationManager) mContext
 					.getSystemService(Context.NOTIFICATION_SERVICE);
 
-			int icon = R.drawable.sync;
+			int icon = R.drawable.status;
 			CharSequence tickerText = runCount + " monitor(s) running";
 
 			Notification notification = new Notification(icon, tickerText,
