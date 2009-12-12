@@ -70,7 +70,7 @@ public class MonitorScheduler {
 		}
 	}
 
-	public void addRunningNotification(ArrayList<Monitor> monitors) {
+	public void addBackgroundNotification(ArrayList<Monitor> monitors) {
 		int runCount = 0;
 		for (int i = 0; monitors != null && i < monitors.size(); i++) {
 			if (monitors.get(i).getState() != Monitor.STATE_STOPPED) {
@@ -104,7 +104,7 @@ public class MonitorScheduler {
 		}
 	}
 
-	public void removeRunningNotification() {
+	public void removeBackgroundNotification() {
 		NotificationManager nm = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 		nm.cancel(NOTIFY_RUNNING);
 	}

@@ -18,4 +18,7 @@
 <string name="ok">Okay</string>
 <string name="manage_monitors_help">Click a monitor to edit.\n\nLong press a monitor to start, stop or remove.</string>
 <string name="edit_monitor_help">Click a condition or action to edit.\n\nLong press a condition or action to remove.</string>
+<string name="pause_menu">Pause</string>
+<string name="play_menu">Play</string>
+<string name="log_menu">View Log</string>
 </resources>

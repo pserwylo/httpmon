@@ -13,5 +13,8 @@
 		android:summary="Use this user agent for all requests."
 		android:key="userAgent" android:defaultValue=""
 		android:entries="@array/useragent_entries" android:entryValues="@array/useragent_values" />
+	<CheckBoxPreference android:title="Background notification?"
+		android:summary="Show notification in status bar when running in background"
+		android:key="backgroundNotification" android:defaultValue="true"/>
 </PreferenceScreen>
 

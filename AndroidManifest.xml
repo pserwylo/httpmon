@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="org.jtb.httpmon" android:versionCode="13" android:versionName="0.2.4">
+	package="org.jtb.httpmon" android:versionCode="15" android:versionName="0.4">
 	<application android:icon="@drawable/icon" android:label="@string/app_name">
 		<activity android:name=".ManageMonitorsActivity"
 			android:launchMode="singleTask" android:label="httpmon - Manage Monitors">
@@ -10,6 +10,7 @@
 			</intent-filter>
 		</activity>
 		<activity android:name=".PrefsActivity" android:label="httpmon - Preferences" />
+		<activity android:name=".LogActivity" android:label="httpmon - View Log" />
 		<activity android:name=".EditMonitorActivity" android:label="httpmon - Edit Monitor" />
 		<activity android:name=".EditRequestActivity" android:label="httpmon - Edit Request" />
 		<activity android:name=".EditResponseTimeConditionActivity"
@@ -49,5 +50,6 @@
 	<uses-permission android:name="android.permission.VIBRATE" />
 	<uses-permission android:name="android.permission.SEND_SMS" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	<uses-permission android:name="android.permission.READ_LOGS" />
 	<uses-sdk android:minSdkVersion="3" />
 </manifest> 

@@ -36,6 +36,7 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.jtb.httpmon.model.Action;
+import org.jtb.httpmon.model.Condition;
 import org.jtb.httpmon.model.Monitor;
 import org.jtb.httpmon.model.Request;
 import org.jtb.httpmon.model.Response;
@@ -45,22 +46,23 @@ import android.content.Intent;
 import android.util.Log;
 
 public class MonitorService extends IntentService {
-	//private static ClientConnectionManager CONNECTION_MGR;
-	//private static HttpParams CONNECTION_PARAMS;
+	// private static ClientConnectionManager CONNECTION_MGR;
+	// private static HttpParams CONNECTION_PARAMS;
 
 	static {
 		// setURLConnectionTrust();
-		//setHttpClientTrust();
+		// setHttpClientTrust();
 	}
 
 	private Prefs mPrefs;
-	
+
 	public MonitorService() {
 		super("monitorService");
 		mPrefs = new Prefs(this);
 	}
 
-	private static ClientConnectionManager getClientConnectionManager(HttpParams params) {
+	private static ClientConnectionManager getClientConnectionManager(
+			HttpParams params) {
 		SchemeRegistry schemeRegistry = new SchemeRegistry();
 		// http scheme
 		schemeRegistry.register(new Scheme("http", PlainSocketFactory
@@ -72,44 +74,36 @@ public class MonitorService extends IntentService {
 				schemeRegistry);
 		return ccm;
 	}
-	
+
 	private static HttpParams getHttpParams() {
 		HttpParams params = new BasicHttpParams();
 		params.setParameter(ConnManagerPNames.MAX_TOTAL_CONNECTIONS, 30);
-		params.setParameter(
-				ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE,
+		params.setParameter(ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE,
 				new ConnPerRouteBean(30));
-		params.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE,
-				false);
-		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);		
+		params.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE, false);
+		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
 		return params;
 	}
-	
+
 	/*
-	private static void setHttpClientTrust() {
-		SchemeRegistry schemeRegistry = new SchemeRegistry();
-		// http scheme
-		schemeRegistry.register(new Scheme("http", PlainSocketFactory
-				.getSocketFactory(), 80));
-		// https scheme
-		schemeRegistry.register(new Scheme("https", new EasySSLSocketFactory(),
-				443));
+	 * private static void setHttpClientTrust() { SchemeRegistry schemeRegistry
+	 * = new SchemeRegistry(); // http scheme schemeRegistry.register(new
+	 * Scheme("http", PlainSocketFactory .getSocketFactory(), 80)); // https
+	 * scheme schemeRegistry.register(new Scheme("https", new
+	 * EasySSLSocketFactory(), 443));
+	 * 
+	 * CONNECTION_PARAMS = new BasicHttpParams();
+	 * CONNECTION_PARAMS.setParameter(ConnManagerPNames.MAX_TOTAL_CONNECTIONS,
+	 * 30); CONNECTION_PARAMS.setParameter(
+	 * ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE, new ConnPerRouteBean(30));
+	 * CONNECTION_PARAMS.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE,
+	 * false); HttpProtocolParams.setVersion(CONNECTION_PARAMS,
+	 * HttpVersion.HTTP_1_1);
+	 * 
+	 * CONNECTION_MGR = new ThreadSafeClientConnManager(CONNECTION_PARAMS,
+	 * schemeRegistry); }
+	 */
 
-		CONNECTION_PARAMS = new BasicHttpParams();
-		CONNECTION_PARAMS.setParameter(ConnManagerPNames.MAX_TOTAL_CONNECTIONS,
-				30);
-		CONNECTION_PARAMS.setParameter(
-				ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE,
-				new ConnPerRouteBean(30));
-		CONNECTION_PARAMS.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE,
-				false);
-		HttpProtocolParams.setVersion(CONNECTION_PARAMS, HttpVersion.HTTP_1_1);
-
-		CONNECTION_MGR = new ThreadSafeClientConnManager(CONNECTION_PARAMS,
-				schemeRegistry);
-	}
-	*/
-	
 	private static void setURLConnectionTrust() {
 		try {
 			HttpsURLConnection
@@ -140,8 +134,7 @@ public class MonitorService extends IntentService {
 			HttpsURLConnection.setDefaultSSLSocketFactory(context
 					.getSocketFactory());
 		} catch (Exception e) { // should never happen
-			Log.e(MonitorService.class.getSimpleName(),
-					"error setting up SSL trust", e);
+			Log.e("httpmon", "error setting up SSL trust", e);
 		}
 	}
 
@@ -150,16 +143,16 @@ public class MonitorService extends IntentService {
 		String name = null;
 		try {
 			name = intent.getAction();
-			Log.d(getClass().getSimpleName(), "received intent for: " + name);
+			Log.d("httpmon", "received intent for: " + name);
 			if (name == null) {
-				Log.w(getClass().getSimpleName(), "name was null, returning");
+				Log.w("httpmon", "name was null, returning");
 				return;
 			}
 
 			Monitor monitor = mPrefs.getMonitor(name);
 			if (monitor == null) {
-				Log.w(getClass().getSimpleName(), "monitor was null for name: "
-						+ name + ", returning");
+				Log.w("httpmon", "monitor was null for name: " + name
+						+ ", returning");
 				return;
 			}
 			monitor.setState(Monitor.STATE_RUNNING);
@@ -169,14 +162,21 @@ public class MonitorService extends IntentService {
 			Response response = getResponseFromHttpClient(monitor.getRequest());
 
 			if (response.getThrowable() != null) {
-				Log.w(getClass().getSimpleName(), response.getThrowable());
+				Log.w("httpmon", "exception occured for monitor: "
+						+ monitor.getName(), response.getThrowable());
 			}
 			int state = Monitor.STATE_VALID;
 			for (int i = 0; i < monitor.getConditions().size(); i++) {
-				if (!monitor.getConditions().get(i).isValid(response)) {
+				Condition c = monitor.getConditions().get(i);
+				if (!c.isValid(response)) {
 					state = Monitor.STATE_INVALID;
-					break;
+					Log.i("httpmon", "monitor: " + monitor.getName()
+							+ " INVALID, condition: " + c.toString()
+							+ " was false");
 				}
+			}
+			if (state == Monitor.STATE_VALID) {
+				Log.i("httpmon", "monitor: " + monitor.getName() + " valid");
 			}
 
 			monitor = mPrefs.getMonitor(monitor.getName());
@@ -278,8 +278,10 @@ public class MonitorService extends IntentService {
 			HttpClient client = new DefaultHttpClient(ccm, params);
 
 			HttpGet get = new HttpGet(request.getUrl());
-			HttpConnectionParams.setConnectionTimeout(client.getParams(), cTimeout * 1000);
-			HttpConnectionParams.setSoTimeout(client.getParams(), rTimeout * 1000);
+			HttpConnectionParams.setConnectionTimeout(client.getParams(),
+					cTimeout * 1000);
+			HttpConnectionParams.setSoTimeout(client.getParams(),
+					rTimeout * 1000);
 			if (userAgent != null && userAgent.length() != 0) {
 				get.setHeader("User-Agent", userAgent);
 			}

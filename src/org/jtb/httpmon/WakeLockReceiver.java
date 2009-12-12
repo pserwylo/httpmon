@@ -31,8 +31,7 @@ public class WakeLockReceiver extends BroadcastReceiver {
 		WakeLock wakeLock = getLock(context, tag);
 		if (!wakeLock.isHeld()) {
 			wakeLock.acquire();
-			Log.d(WakeLockReceiver.class.getSimpleName(),
-					"wake lock acquired for tag: " + tag);
+			Log.d("httpmon", "wake lock acquired for tag: " + tag);
 		}
 	}
 
@@ -47,10 +46,9 @@ public class WakeLockReceiver extends BroadcastReceiver {
 			if (wakeLock.isHeld()) {
 				wakeLock.release();
 				wakeLocks.remove(tag);
-				Log.d(WakeLockReceiver.class.getSimpleName(),
-						"wake lock released for tag: " + tag);
+				Log.d("httpmon", "wake lock released for tag: " + tag);
 			} else {
-				Log.w(WakeLockReceiver.class.getSimpleName(),
+				Log.w("httpmon",
 						"release attempted, but wake lock was not held for tag: "
 								+ tag);
 			}

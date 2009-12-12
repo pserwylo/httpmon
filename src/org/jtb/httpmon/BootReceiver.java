@@ -9,7 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 
 public class BootReceiver extends BroadcastReceiver {
-	
+
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Prefs prefs = new Prefs(context);
@@ -19,7 +19,9 @@ public class BootReceiver extends BroadcastReceiver {
 		MonitorScheduler scheduler = new MonitorScheduler(context);
 		ArrayList<Monitor> monitors = prefs.getMonitors();
 		scheduler.restartAll(monitors);
-		scheduler.addRunningNotification(monitors);
+		if (prefs.isBackgroundNotification()) {
+			scheduler.addBackgroundNotification(monitors);
+		}
 	}
 
 }

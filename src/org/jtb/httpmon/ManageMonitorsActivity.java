@@ -33,12 +33,13 @@ import android.widget.AdapterView.OnItemLongClickListener;
 
 public class ManageMonitorsActivity extends Activity {
 	private static final int HELP_DIALOG = 0;
-	
+
 	private static final int NEW_MONITOR_MENU = 0;
 	private static final int START_ALL_MENU = 1;
 	private static final int STOP_ALL_MENU = 2;
 	private static final int PREFS_MENU = 3;
 	private static final int HELP_MENU = 4;
+	private static final int LOG_MENU = 5;
 
 	static final int NEW_MONITOR_REQUEST = 0;
 	static final int EDIT_MONITOR_REQUEST = 1;
@@ -52,9 +53,10 @@ public class ManageMonitorsActivity extends Activity {
 	private Monitor mEditMonitor;
 	private Timer mUpdateTimer;
 	private MonitorScheduler mScheduler;
-	
+	private Prefs mPrefs;
+
 	private AlertDialog mHelpDialog;
-	
+
 	public Monitor getEditMonitor() {
 		return mEditMonitor;
 	}
@@ -71,9 +73,10 @@ public class ManageMonitorsActivity extends Activity {
 		setContentView(R.layout.manage_monitors);
 
 		mThis = this;
+		mPrefs = new Prefs(this);
 		mReceiver = new ManageMonitorsReceiver(this);
 		mScheduler = new MonitorScheduler(this);
-		
+
 		mMonitorList = (ListView) findViewById(R.id.monitor_list);
 		mMonitorList.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View v,
@@ -108,9 +111,11 @@ public class ManageMonitorsActivity extends Activity {
 				android.R.drawable.ic_menu_upload);
 		menu.add(0, STOP_ALL_MENU, 2, R.string.stop_all_menu).setIcon(
 				android.R.drawable.ic_menu_close_clear_cancel);
-		menu.add(0, PREFS_MENU, 3, R.string.preferences_menu).setIcon(
+		menu.add(0, LOG_MENU, 3, R.string.log_menu).setIcon(
+				android.R.drawable.ic_menu_view);
+		menu.add(0, PREFS_MENU, 4, R.string.preferences_menu).setIcon(
 				android.R.drawable.ic_menu_preferences);
-		menu.add(0, HELP_MENU, 3, R.string.help_menu).setIcon(
+		menu.add(0, HELP_MENU, 5, R.string.help_menu).setIcon(
 				android.R.drawable.ic_menu_help);
 		return result;
 	}
@@ -131,8 +136,12 @@ public class ManageMonitorsActivity extends Activity {
 			mScheduler.startAll(mMonitors);
 			return true;
 		case PREFS_MENU:
-			Intent i = new Intent(this, PrefsActivity.class);
-			startActivityForResult(i, PREFS_REQUEST);
+			Intent pi = new Intent(this, PrefsActivity.class);
+			startActivityForResult(pi, PREFS_REQUEST);
+			return true;
+		case LOG_MENU:
+			Intent li = new Intent(this, LogActivity.class);
+			startActivity(li);
 			return true;
 		case HELP_MENU:
 			showDialog(HELP_DIALOG);
@@ -204,17 +213,21 @@ public class ManageMonitorsActivity extends Activity {
 		super.onPause();
 		unregisterReceiver(mReceiver);
 		mUpdateTimer.cancel();
-		mScheduler.addRunningNotification(mMonitors);
-		
-		Log.d(getClass().getSimpleName(), "paused");
+
+		if (mPrefs.isBackgroundNotification()) {
+			mScheduler.addBackgroundNotification(mMonitors);
+		}
+
+		Log.d("httpmon", "paused");
 	}
-	
+
 	@Override
 	public void onResume() {
 		super.onResume();
 
 		registerReceiver(mReceiver, new IntentFilter("ManageMonitors.update"));
-		mScheduler.removeRunningNotification();
+		mScheduler.removeBackgroundNotification();
+
 		update();
 		mScheduler.restartAll(mMonitors);
 		mUpdateTimer = new Timer();
@@ -223,17 +236,16 @@ public class ManageMonitorsActivity extends Activity {
 				sendBroadcast(new Intent("ManageMonitors.update"));
 			}
 		}, 15 * 1000, 15 * 1000);
-		
-		Log.d(getClass().getSimpleName(), "resumed");
+
+		Log.d("httpmon", "resumed");
 	}
-	
+
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
 		case HELP_DIALOG:
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle("Manage Monitors Help");
-			builder
-					.setMessage(R.string.manage_monitors_help);
+			builder.setMessage(R.string.manage_monitors_help);
 			builder.setNeutralButton(R.string.ok,
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
@@ -242,7 +254,7 @@ public class ManageMonitorsActivity extends Activity {
 					});
 			mHelpDialog = builder.create();
 			return mHelpDialog;
-		
+
 		}
 		return null;
 	}

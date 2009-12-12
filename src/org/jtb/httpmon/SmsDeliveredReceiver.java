@@ -11,10 +11,10 @@ public class SmsDeliveredReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent arg1) {
 		switch (getResultCode()) {
 		case Activity.RESULT_OK:
-			Log.d(getClass().getSimpleName(), "SMS delivered");
+			Log.d("httpmon", "SMS delivered");
 			break;
 		case Activity.RESULT_CANCELED:
-			Log.d(getClass().getSimpleName(), "SMS not delivered");
+			Log.d("httpmon", "SMS not delivered");
 			break;
 		}
 	}

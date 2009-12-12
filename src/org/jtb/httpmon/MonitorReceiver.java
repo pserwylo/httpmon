@@ -9,7 +9,7 @@ public class MonitorReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		Log.d(getClass().getSimpleName(), "received intent for: "
+		Log.d("httpmon", "received intent for: "
 				+ intent.getAction());
 		Intent wlIntent = new Intent("acquire", null, context,
 				WakeLockReceiver.class);

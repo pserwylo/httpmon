@@ -151,4 +151,8 @@ public class Prefs {
 	public boolean isBootStart() {
 		return getBoolean("bootStart", false);
 	}
+	
+	public boolean isBackgroundNotification() {
+		return getBoolean("backgroundNotification", true);
+	}
 }
