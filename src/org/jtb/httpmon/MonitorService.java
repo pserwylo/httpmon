@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -155,6 +156,8 @@ public class MonitorService extends IntentService {
 						+ ", returning");
 				return;
 			}
+
+			int currentState = monitor.getState();
 			monitor.setState(Monitor.STATE_RUNNING);
 			mPrefs.setMonitor(monitor);
 			sendBroadcast(new Intent("ManageMonitors.update"));
@@ -162,38 +165,56 @@ public class MonitorService extends IntentService {
 			Response response = getResponseFromHttpClient(monitor.getRequest());
 
 			if (response.getThrowable() != null) {
+				// 
+				// don't bother checking conditions if we get an exception
+				// assume the problem is on the client's end,
+				// no network connection, unknown host, etc.
+				//
 				Log.w("httpmon", "exception occured for monitor: "
-						+ monitor.getName(), response.getThrowable());
-			}
-			int state = Monitor.STATE_VALID;
-			for (int i = 0; i < monitor.getConditions().size(); i++) {
-				Condition c = monitor.getConditions().get(i);
-				if (!c.isValid(response)) {
-					state = Monitor.STATE_INVALID;
-					Log.i("httpmon", "monitor: " + monitor.getName()
-							+ " INVALID, condition: " + c.toString()
-							+ " was false");
-				}
-			}
-			if (state == Monitor.STATE_VALID) {
-				Log.i("httpmon", "monitor: " + monitor.getName() + " valid");
-			}
-
-			monitor = mPrefs.getMonitor(monitor.getName());
-			if (monitor != null && monitor.getState() != Monitor.STATE_STOPPED) {
-				monitor.setState(state);
-				monitor.setLastUpdatedTime();
-
-				for (int i = 0; i < monitor.getActions().size(); i++) {
-					Action action = monitor.getActions().get(i);
-					if (monitor.getState() == Monitor.STATE_INVALID) {
-						action.failure(this, monitor);
-					} else if (monitor.getState() == Monitor.STATE_VALID) {
-						action.success(this, monitor);
-					}
-				}
+						+ monitor.getName() + ", ignoring response", response
+						.getThrowable());
+				monitor.setState(currentState);
 				mPrefs.setMonitor(monitor);
 				sendBroadcast(new Intent("ManageMonitors.update"));
+			} else {
+				// 
+				// check conditions
+				//
+				currentState = Monitor.STATE_VALID;
+				
+				for (int i = 0; i < monitor.getConditions().size(); i++) {
+					Condition c = monitor.getConditions().get(i);
+					if (!c.isValid(response)) {
+						currentState = Monitor.STATE_INVALID;
+						Log.e("httpmon", "monitor: " + monitor.getName()
+								+ " INVALID, condition: " + c.toString()
+								+ " was false");
+					}
+				}
+
+				if (currentState == Monitor.STATE_VALID) {
+					Log
+							.i("httpmon", "monitor: " + monitor.getName()
+									+ " valid");
+				}
+
+				monitor = mPrefs.getMonitor(monitor.getName());
+				if (monitor != null
+						&& monitor.getState() != Monitor.STATE_STOPPED) {
+					monitor.setState(currentState);
+					monitor.setLastUpdatedTime();
+
+					for (int i = 0; i < monitor.getActions().size(); i++) {
+						Action action = monitor.getActions().get(i);
+						if (monitor.getState() == Monitor.STATE_INVALID) {
+							action.failure(this, monitor);
+						} else if (monitor.getState() == Monitor.STATE_VALID) {
+							action.success(this, monitor);
+						}
+					}
+					mPrefs.setMonitor(monitor);
+					sendBroadcast(new Intent("ManageMonitors.update"));
+				}
 			}
 		} finally {
 			if (name != null) {
