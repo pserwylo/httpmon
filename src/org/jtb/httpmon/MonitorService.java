@@ -145,11 +145,18 @@ public class MonitorService extends IntentService {
 	private boolean isConnected() {
 		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo ni = cm.getActiveNetworkInfo();
-		if (ni != null && ni.getState() == NetworkInfo.State.CONNECTED) {
-			return true;
+		if (ni == null) {
+			Log.d("httpmon", "no active network");
+			return false;
 		}
-		
-		return false;
+		Log.d("httpmon", "active network, type: " + ni.getTypeName());			
+		if (ni.getState() != NetworkInfo.State.CONNECTED) {
+			Log.d("httpmon", "network is not connected, state: " + ni.getState());			
+			return false;
+		}
+
+		Log.d("httpmon", "network state is connected");			
+		return true;
 	}
 	
 	@Override
