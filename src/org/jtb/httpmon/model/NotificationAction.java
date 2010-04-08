@@ -72,7 +72,7 @@ public class NotificationAction extends Action {
 		}
 		
 		if (alertNotification) {
-			notification.flags |= Notification.DEFAULT_SOUND;
+			notification.defaults |= Notification.DEFAULT_SOUND;
 		}
 
 		if (vibrateNotification) {
