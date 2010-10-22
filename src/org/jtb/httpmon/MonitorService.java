@@ -236,10 +236,7 @@ public class MonitorService extends IntentService {
 			}
 		} finally {
 			if (name != null) {
-				Intent wlIntent = new Intent("release", null, this,
-						WakeLockReceiver.class);
-				wlIntent.putExtra("org.jtb.httpmon.monitor.name", name);
-				sendBroadcast(wlIntent);
+				WakeLocker.release(name);
 			}
 		}
 	}

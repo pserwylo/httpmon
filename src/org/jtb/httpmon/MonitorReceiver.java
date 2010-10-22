@@ -11,10 +11,7 @@ public class MonitorReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		Log.d("httpmon", "received intent for: "
 				+ intent.getAction());
-		Intent wlIntent = new Intent("acquire", null, context,
-				WakeLockReceiver.class);
-		wlIntent.putExtra("org.jtb.httpmon.monitor.name", intent.getAction());
-		context.sendBroadcast(wlIntent);
+		WakeLocker.acquire(context, intent.getAction());
 		Intent svcIntent = new Intent(intent.getAction(), null, context,
 				MonitorService.class);
 		context.startService(svcIntent);

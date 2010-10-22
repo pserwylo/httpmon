@@ -74,7 +74,8 @@ public class EasySSLSocketFactory implements SocketFactory,
 
 	public Socket createSocket(Socket socket, String host, int port,
 			boolean autoClose) throws IOException, UnknownHostException {
-		return getSSLContext().getSocketFactory().createSocket();
+		return getSSLContext().getSocketFactory().createSocket(socket, host,
+				port, autoClose);
 	}
 
 	public boolean equals(Object obj) {
