@@ -3,7 +3,7 @@
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
 	<TextView android:id="@+id/empty_list_text" 
-		android:text="No monitors defined. Select Menu>Add to create one."
+		android:text="No monitors defined. Select Menu > New Monitor to create one."
 		android:textSize="16px" android:layout_width="fill_parent"
 		android:gravity="center" android:layout_height="fill_parent" android:layout_margin="20px"/>
 	<ListView android:id="@+id/monitor_list" android:layout_width="fill_parent"

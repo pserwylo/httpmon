@@ -2,6 +2,8 @@ package org.jtb.httpmon;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.jtb.httpmon.model.ContainsCondition;
 import org.jtb.httpmon.model.ContentContainsCondition;
@@ -14,7 +16,8 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
-public abstract class EditContainsConditionActivity extends EditConditionActivity {
+public abstract class EditContainsConditionActivity extends
+		EditConditionActivity {
 
 	private EditText mPatternEdit;
 	private RadioGroup mTypeGroup;
@@ -43,8 +46,7 @@ public abstract class EditContainsConditionActivity extends EditConditionActivit
 	}
 
 	protected void setViews() {
-		mPatternEdit.setText(((ContainsCondition) mCondition)
-				.getPattern());
+		mPatternEdit.setText(((ContainsCondition) mCondition).getPattern());
 		switch (((ContainsCondition) mCondition).getPatternType()) {
 		case ContainsCondition.TYPE_SUBSTRING:
 			mSubstringRadio.setChecked(true);
@@ -68,12 +70,20 @@ public abstract class EditContainsConditionActivity extends EditConditionActivit
 	}
 
 	protected boolean validateCondition() {
-		if (((ContainsCondition) mCondition).getPattern() == null
-				|| ((ContainsCondition) mCondition).getPattern()
-						.length() == 0) {
+		String pattern = ((ContainsCondition) mCondition).getPattern();
+		if (pattern == null || pattern.length() == 0) {
 			Toast.makeText(this, "Enter a non-empty pattern.",
 					Toast.LENGTH_LONG).show();
 			return false;
+		}
+		if (((ContainsCondition) mCondition).getPatternType() == ContainsCondition.TYPE_REGEX) {
+			try {
+				Pattern p = Pattern.compile(pattern);
+			} catch (PatternSyntaxException e) {
+				Toast.makeText(this, "Invalid regular expression.",
+						Toast.LENGTH_LONG).show();
+				return false;
+			}
 		}
 		return true;
 	}
