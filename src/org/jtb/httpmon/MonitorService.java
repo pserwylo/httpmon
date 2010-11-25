@@ -212,6 +212,11 @@ public class MonitorService extends IntentService {
 				return;
 			}
 
+			int currentState = monitor.getState();
+			monitor.setState(Monitor.STATE_STARTED);
+			mPrefs.setMonitor(monitor);
+			sendBroadcast(new Intent("ManageMonitors.update"));
+			
 			if (!isNetworkConnected() || !isDataConnected()) {
 				Log.w("httpmon", "was not connected when checking monitor: "
 						+ name + ", returning");
@@ -222,11 +227,10 @@ public class MonitorService extends IntentService {
 				return;				
 			}
 
-			int currentState = monitor.getState();
 			monitor.setState(Monitor.STATE_RUNNING);
 			mPrefs.setMonitor(monitor);
 			sendBroadcast(new Intent("ManageMonitors.update"));
-
+			
 			Response response = getResponseFromHttpClient(monitor.getRequest());
 			currentState = Monitor.STATE_VALID;
 

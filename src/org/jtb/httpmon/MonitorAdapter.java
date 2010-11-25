@@ -23,8 +23,14 @@ public class MonitorAdapter extends ArrayAdapter {
 	}
 
 	public View getView(int position, View convertView, ViewGroup parent) {
+		View view;
+		if (convertView != null) {
+			view = convertView;
+		} else {
+			view = inflater.inflate(R.layout.monitor_row, null);			
+		}
+		
 		Monitor monitor = mMonitors.get(position);
-		View view = inflater.inflate(R.layout.monitor_row, null);
 
 		ImageView statusImg = (ImageView) view.findViewById(R.id.status_img);
 		int state = monitor.getState();
