@@ -11,6 +11,8 @@ import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -47,11 +49,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 public class MonitorService extends IntentService {
 	// private static ClientConnectionManager CONNECTION_MGR;
 	// private static HttpParams CONNECTION_PARAMS;
+	private static final Set<Integer> INVALID_NETWORK_TYPES = new HashSet<Integer>() {
+		{
+			add(TelephonyManager.NETWORK_TYPE_GPRS);
+		}
+	};
 
 	static {
 		// setURLConnectionTrust();
@@ -142,23 +150,49 @@ public class MonitorService extends IntentService {
 		}
 	}
 
-	private boolean isConnected() {
+	private boolean isNetworkConnected() {
 		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo ni = cm.getActiveNetworkInfo();
 		if (ni == null) {
 			Log.d("httpmon", "no active network");
 			return false;
 		}
-		Log.d("httpmon", "active network, type: " + ni.getTypeName());			
-		if (ni.getState() != NetworkInfo.State.CONNECTED) {
-			Log.d("httpmon", "network is not connected, state: " + ni.getState());			
+		Log.d("httpmon", "active network, type: " + ni.getTypeName());
+		if (!ni.isConnected()) {
+			Log.d("httpmon",
+					"network is not connected, state: " + ni.getState());
 			return false;
 		}
 
-		Log.d("httpmon", "network state is connected");			
+		Log.d("httpmon", "network state is connected");
 		return true;
 	}
-	
+
+	private boolean isNetworkTypeValid() {
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo ni = cm.getActiveNetworkInfo();
+		if (ni == null) {
+			Log.d("httpmon", "no active network, can't check network type");
+			return false;
+		}
+		Integer type = ni.getType();
+		Log.d("httpmon", "network type: " + type);
+		if (INVALID_NETWORK_TYPES.contains(type)) {
+			return false;
+		}
+		return true;
+	}
+
+	private boolean isDataConnected() {
+		TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		if (tm.getDataState() != TelephonyManager.DATA_CONNECTED) {
+			Log.d("httpmon", "no data connection");
+			return false;
+		}
+		Log.d("httpmon", "data state is connected");
+		return true;
+	}
+
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		String name = null;
@@ -178,12 +212,16 @@ public class MonitorService extends IntentService {
 				return;
 			}
 
-			if (!isConnected()) {
-				Log.w("httpmon", "was not connected when checking monitor: " + name
-						+ ", returning");
+			if (!isNetworkConnected() || !isDataConnected()) {
+				Log.w("httpmon", "was not connected when checking monitor: "
+						+ name + ", returning");
 				return;
 			}
-			
+			if (!isNetworkTypeValid()) {
+				Log.w("httpmon", "network type invalid, returning");
+				return;				
+			}
+
 			int currentState = monitor.getState();
 			monitor.setState(Monitor.STATE_RUNNING);
 			mPrefs.setMonitor(monitor);
@@ -193,14 +231,15 @@ public class MonitorService extends IntentService {
 			currentState = Monitor.STATE_VALID;
 
 			if (response.getThrowable() != null) {
-				// 
+				//
 				// don't bother checking conditions if we get an exception
 				//
-				Log.w("httpmon", "exception occured for monitor: "
-						+ monitor.getName(), response.getThrowable());
+				Log.w("httpmon",
+						"exception occured for monitor: " + monitor.getName(),
+						response.getThrowable());
 				currentState = Monitor.STATE_INVALID;
 			} else {
-				// 
+				//
 				// check conditions
 				//
 				for (int i = 0; i < monitor.getConditions().size(); i++) {
