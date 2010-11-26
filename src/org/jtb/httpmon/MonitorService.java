@@ -183,16 +183,6 @@ public class MonitorService extends IntentService {
 		return true;
 	}
 
-	private boolean isDataConnected() {
-		TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-		if (tm.getDataState() != TelephonyManager.DATA_CONNECTED) {
-			Log.d("httpmon", "no data connection");
-			return false;
-		}
-		Log.d("httpmon", "data state is connected");
-		return true;
-	}
-
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		String name = null;
@@ -217,7 +207,7 @@ public class MonitorService extends IntentService {
 			mPrefs.setMonitor(monitor);
 			sendBroadcast(new Intent("ManageMonitors.update"));
 			
-			if (!isNetworkConnected() || !isDataConnected()) {
+			if (!isNetworkConnected()) {
 				Log.w("httpmon", "was not connected when checking monitor: "
 						+ name + ", returning");
 				return;
