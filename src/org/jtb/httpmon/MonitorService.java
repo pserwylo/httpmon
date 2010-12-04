@@ -55,11 +55,6 @@ import android.util.Log;
 public class MonitorService extends IntentService {
 	// private static ClientConnectionManager CONNECTION_MGR;
 	// private static HttpParams CONNECTION_PARAMS;
-	private static final Set<Integer> INVALID_NETWORK_TYPES = new HashSet<Integer>() {
-		{
-			add(TelephonyManager.NETWORK_TYPE_GPRS);
-		}
-	};
 
 	static {
 		// setURLConnectionTrust();
@@ -168,21 +163,6 @@ public class MonitorService extends IntentService {
 		return true;
 	}
 
-	private boolean isNetworkTypeValid() {
-		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo ni = cm.getActiveNetworkInfo();
-		if (ni == null) {
-			Log.d("httpmon", "no active network, can't check network type");
-			return false;
-		}
-		Integer type = ni.getType();
-		Log.d("httpmon", "network type: " + type);
-		if (INVALID_NETWORK_TYPES.contains(type)) {
-			return false;
-		}
-		return true;
-	}
-
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		String name = null;
@@ -211,10 +191,6 @@ public class MonitorService extends IntentService {
 				Log.w("httpmon", "was not connected when checking monitor: "
 						+ name + ", returning");
 				return;
-			}
-			if (!isNetworkTypeValid()) {
-				Log.w("httpmon", "network type invalid, returning");
-				return;				
 			}
 
 			monitor.setState(Monitor.STATE_RUNNING);
