@@ -10,6 +10,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.support.v4.app.NotificationCompat;
 
 public class NotificationAction extends Action {
 	private int intervalMinutes = 15;
@@ -56,40 +57,35 @@ public class NotificationAction extends Action {
 		NotificationManager nm = (NotificationManager) context
 				.getSystemService(Context.NOTIFICATION_SERVICE);
 
-		int icon = android.R.drawable.stat_notify_error;
-		CharSequence tickerText = "Monitor failed: " + monitor.getName();
-
-		Notification notification = new Notification(icon, tickerText, monitor
-				.getLastUpdatedTime());
-		notification.flags |= Notification.FLAG_AUTO_CANCEL;
-		notification.number = failureCount;
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+				.setContentTitle("Monitor failed: " + monitor.getName())
+				.setContentText(monitor.getRequest().toString())
+				.setSmallIcon(android.R.drawable.stat_notify_error)
+				.setTicker("Monitor failed: " + monitor.getName())
+				.setWhen(monitor.getLastUpdatedTime())
+				.setNumber(failureCount)
+				.setAutoCancel(true);
 
 		if (flashNotification) {
-			notification.flags |= Notification.FLAG_SHOW_LIGHTS;
-			notification.ledOffMS = 100;
-			notification.ledOnMS = 250;
-			notification.ledARGB = Color.parseColor("#DC143C");
+			builder.setLights(Color.parseColor("#DC143C"), 250, 100);
 		}
 		
 		if (alertNotification) {
-			notification.defaults |= Notification.DEFAULT_SOUND;
+			builder.setDefaults(Notification.DEFAULT_SOUND);
 		}
 
 		if (vibrateNotification) {
-			notification.vibrate = new long[] { 250, 100, 250, 100, 250, 100, 250, 100, 250 };
+			builder.setVibrate(new long[] { 250, 100, 250, 100, 250, 100, 250, 100, 250 });
 		}
 		
-		CharSequence contentTitle = "Monitor failed: " + monitor.getName();
-		CharSequence contentText = monitor.getRequest().toString();
-
 		Intent notificationIntent = new Intent(context,
 				ManageMonitorsActivity.class);
 		PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
 				notificationIntent, 0);
 
-		notification.setLatestEventInfo(context, contentTitle, contentText,
-				contentIntent);
-		nm.notify(monitor.getName().hashCode(), notification);
+		builder.setContentIntent(contentIntent);
+
+		nm.notify(monitor.getName().hashCode(), builder.build());
 	}
 
 	@Override

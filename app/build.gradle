@@ -1,0 +1,28 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
+    useLibrary 'org.apache.http.legacy'
+
+    defaultConfig {
+        applicationId "com.serwylo.httpmon"
+    }
+
+    lintOptions {
+        // Ouptuts report during build, so that it can be seen in the CI log.
+        textReport true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:23.1.1'
+}

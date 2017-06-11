@@ -11,6 +11,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
+import android.support.v4.app.NotificationCompat;
 
 public class MonitorScheduler {
 	private static final int NOTIFY_RUNNING = 100;
@@ -85,21 +86,25 @@ public class MonitorScheduler {
 			int icon = R.drawable.status;
 			CharSequence tickerText = runCount + " monitor(s) running";
 
-			Notification notification = new Notification(icon, tickerText,
-					System.currentTimeMillis());
-			notification.flags |= Notification.FLAG_ONGOING_EVENT
-					| Notification.FLAG_NO_CLEAR;
-
-			CharSequence contentTitle = tickerText;
-			CharSequence contentText = "Click to manage";
+			NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext)
+					.setSmallIcon(icon)
+					.setTicker(tickerText)
+					.setContentTitle(tickerText)
+					.setContentTitle("Click to manage")
+					.setWhen(System.currentTimeMillis())
+					.setOngoing(true);
 
 			Intent notificationIntent = new Intent(mContext,
 					ManageMonitorsActivity.class);
 			PendingIntent contentIntent = PendingIntent.getActivity(mContext, 0,
 					notificationIntent, 0);
 
-			notification.setLatestEventInfo(mContext, contentTitle, contentText,
-					contentIntent);
+			Notification notification = builder
+					.setContentIntent(contentIntent)
+					.build();
+
+			notification.flags |= Notification.FLAG_NO_CLEAR;
+
 			nm.notify(NOTIFY_RUNNING, notification);
 		}
 	}
